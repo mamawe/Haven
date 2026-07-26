@@ -1,48 +1,83 @@
 import { useState, useMemo } from 'react'
 import { knowledgeBase } from '../data/knowledge'
 import { getBabyAgeInMonths } from '../utils/storage'
+import type { Stage } from '../types'
 
 type Category = 'all' | 'sleep' | 'feeding' | 'development' | 'health' | 'mama'
 
 const categoryLabels: Record<Category, string> = {
-  all: '全部',
-  sleep: '睡眠',
-  feeding: '喂养',
-  development: '发育',
-  health: '健康',
-  mama: '妈妈',
+  all: '全部', sleep: '睡眠', feeding: '喂养', development: '发育', health: '健康', mama: '妈妈',
 }
-
 const categoryIcons: Record<Category, string> = {
-  all: '📖',
-  sleep: '😴',
-  feeding: '🍼',
-  development: '🧠',
-  health: '🏥',
-  mama: '💝',
+  all: '📖', sleep: '😴', feeding: '🍼', development: '🧠', health: '🏥', mama: '💝',
 }
 
-const months = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+const stageTabs: { key: Stage; label: string; icon: string }[] = [
+  { key: 'prepregnancy', label: '备孕', icon: '🌱' },
+  { key: 'pregnancy', label: '孕期', icon: '🤰' },
+  { key: 'infant', label: '0-1岁', icon: '👶' },
+  { key: 'toddler', label: '1-3岁', icon: '🧒' },
+]
+
+// 每个阶段的"期"筛选
+const periodOptions: Record<Stage, { label: string; match: (m: number) => boolean }[]> = {
+  prepregnancy: [{ label: '备孕', match: () => true }],
+  pregnancy: [
+    { label: '孕早期', match: m => m === 1 },
+    { label: '孕中期', match: m => m === 2 },
+    { label: '孕晚期', match: m => m === 3 },
+  ],
+  infant: Array.from({ length: 13 }, (_, m) => ({
+    label: m === 0 ? '新生儿' : `${m}个月`,
+    match: (month: number) => month === m,
+  })),
+  toddler: [
+    { label: '1-2岁', match: m => m >= 13 && m <= 24 },
+    { label: '2-3岁', match: m => m >= 25 && m <= 36 },
+  ],
+}
+
+function stageMonthLabel(stage: Stage, month: number): string {
+  if (stage === 'pregnancy') {
+    return month === 1 ? '孕早期' : month === 2 ? '孕中期' : '孕晚期'
+  }
+  if (stage === 'prepregnancy') return '备孕'
+  if (stage === 'infant') return month === 0 ? '新生儿' : `${month}个月`
+  // toddler
+  const y = Math.floor(month / 12)
+  const r = month % 12
+  if (y === 0) return `${r}个月`
+  if (r === 0) return `${y}岁`
+  if (r === 6) return `${y}岁半`
+  return `${y}岁${r}个月`
+}
 
 export function KnowledgePage() {
-  const [selectedMonth, setSelectedMonth] = useState<number | null>(null)
+  const babyAge = getBabyAgeInMonths()
+
+  const defaultStage: Stage =
+    babyAge === null ? 'infant'
+    : babyAge <= 12 ? 'infant'
+    : babyAge <= 36 ? 'toddler'
+    : 'infant'
+
+  const [selectedStage, setSelectedStage] = useState<Stage>(defaultStage)
+  const [selectedPeriodIdx, setSelectedPeriodIdx] = useState<number | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<Category>('all')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [search, setSearch] = useState('')
 
-  const babyAge = getBabyAgeInMonths()
-
-  // 默认选中宝宝当前月龄
-  useState(() => {
-    if (babyAge !== null && babyAge <= 12) {
-      setSelectedMonth(babyAge)
-    }
-  })
+  // 切换阶段时重置期筛选
+  const handleStage = (s: Stage) => {
+    setSelectedStage(s)
+    setSelectedPeriodIdx(null)
+  }
 
   const filtered = useMemo(() => {
-    let items = knowledgeBase
-    if (selectedMonth !== null) {
-      items = items.filter(i => i.month === selectedMonth)
+    let items = knowledgeBase.filter(i => i.stage === selectedStage)
+    if (selectedPeriodIdx !== null) {
+      const period = periodOptions[selectedStage][selectedPeriodIdx]
+      items = items.filter(i => period.match(i.month))
     }
     if (selectedCategory !== 'all') {
       items = items.filter(i => i.category === selectedCategory)
@@ -56,16 +91,57 @@ export function KnowledgePage() {
       )
     }
     return items
-  }, [selectedMonth, selectedCategory, search])
+  }, [selectedStage, selectedPeriodIdx, selectedCategory, search])
+
+  const currentPeriods = periodOptions[selectedStage]
 
   return (
     <div className="px-4 py-6 space-y-5">
       <h1 className="text-2xl font-serif text-calm-800 text-center">知识库</h1>
-      {babyAge !== null && babyAge <= 12 && (
-        <p className="text-center text-sm text-calm-500 -mt-3">
-          宝宝 {babyAge} 个月 · 为你筛选了这个阶段的内容
-        </p>
-      )}
+
+      {/* Stage Tabs */}
+      <div className="flex gap-2 bg-calm-100 rounded-2xl p-1">
+        {stageTabs.map(s => (
+          <button
+            key={s.key}
+            onClick={() => handleStage(s.key)}
+            className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
+              selectedStage === s.key
+                ? 'bg-white text-calm-800 shadow-sm'
+                : 'text-calm-500 hover:text-calm-700'
+            }`}
+          >
+            <span className="mr-1">{s.icon}</span>{s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Period Filter */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 scrollbar-hide">
+        <button
+          onClick={() => setSelectedPeriodIdx(null)}
+          className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+            selectedPeriodIdx === null
+              ? 'bg-warm-500 text-white'
+              : 'bg-white text-calm-600 border border-calm-200 hover:border-calm-300'
+          }`}
+        >
+          全部
+        </button>
+        {currentPeriods.map((p, idx) => (
+          <button
+            key={p.label}
+            onClick={() => setSelectedPeriodIdx(idx === selectedPeriodIdx ? null : idx)}
+            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              selectedPeriodIdx === idx
+                ? 'bg-warm-500 text-white'
+                : 'bg-white text-calm-600 border border-calm-200 hover:border-calm-300'
+            }`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
 
       {/* Search */}
       <input
@@ -75,36 +151,6 @@ export function KnowledgePage() {
         onChange={e => setSearch(e.target.value)}
         className="input-field text-sm"
       />
-
-      {/* Month Filter */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 scrollbar-hide">
-        <button
-          onClick={() => setSelectedMonth(null)}
-          className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-            selectedMonth === null
-              ? 'bg-warm-500 text-white'
-              : 'bg-white text-calm-600 border border-calm-200 hover:border-calm-300'
-          }`}
-        >
-          全部月龄
-        </button>
-        {months.map(m => (
-          <button
-            key={m}
-            onClick={() => setSelectedMonth(m === selectedMonth ? null : m)}
-            className={`shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              selectedMonth === m
-                ? 'bg-warm-500 text-white'
-                : m === babyAge
-                  ? 'bg-warm-100 text-warm-700 border border-warm-300'
-                  : 'bg-white text-calm-600 border border-calm-200 hover:border-calm-300'
-            }`}
-          >
-            {m === 0 ? '新生儿' : `${m}个月`}
-            {m === babyAge && selectedMonth !== m && <span className="ml-0.5">👶</span>}
-          </button>
-        ))}
-      </div>
 
       {/* Category Filter */}
       <div className="flex gap-2 flex-wrap">
@@ -129,7 +175,7 @@ export function KnowledgePage() {
           <div className="card text-center py-8">
             <span className="text-3xl block mb-2">🔍</span>
             <p className="text-calm-500 text-sm">没有找到相关内容</p>
-            <p className="text-calm-400 text-xs mt-1">试试换个月龄或分类</p>
+            <p className="text-calm-400 text-xs mt-1">试试换个阶段或分类</p>
           </div>
         ) : (
           filtered.map(item => (
@@ -142,7 +188,7 @@ export function KnowledgePage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs px-2 py-0.5 bg-calm-100 rounded-full text-calm-600 font-medium">
-                        {item.month === 0 ? '新生儿' : `${item.month}个月`}
+                        {stageMonthLabel(item.stage, item.month)}
                       </span>
                       <span className="text-xs text-calm-400">{categoryIcons[item.category]} {categoryLabels[item.category]}</span>
                     </div>
@@ -161,7 +207,6 @@ export function KnowledgePage() {
                     {item.content}
                   </div>
 
-                  {/* Quick Tip */}
                   {item.quickTip && (
                     <div className="bg-warm-50 rounded-xl p-3 flex items-start gap-2">
                       <span className="text-warm-500 text-sm mt-0.5">💡</span>
@@ -169,7 +214,6 @@ export function KnowledgePage() {
                     </div>
                   )}
 
-                  {/* Tags */}
                   <div className="flex gap-1.5 flex-wrap">
                     {item.tags.map(tag => (
                       <span key={tag} className="text-xs px-2 py-0.5 bg-calm-100 rounded-full text-calm-500">

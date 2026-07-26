@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react'
 import { getScaleHistory, getDailyRecords } from '../utils/storage'
+import { useProfile } from '../context/ProfileContext'
+import { ShareCard } from '../components/ShareCard'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import type { ScaleResult, DailyRecord } from '../types'
 
 export function TrendsPage() {
+  const { profile, profileName } = useProfile()
   const [scaleHistory, setScaleHistory] = useState<ScaleResult[]>([])
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([])
+  const [shareOpen, setShareOpen] = useState(false)
 
   useEffect(() => {
     setScaleHistory(getScaleHistory())
     setDailyRecords(getDailyRecords())
-  }, [])
+  }, [profile])
 
   // 最近 14 天的情绪数据
   const recentRecords = dailyRecords
@@ -67,6 +71,7 @@ export function TrendsPage() {
   return (
     <div className="px-4 py-6 space-y-5">
       <h1 className="text-2xl font-serif text-calm-800 text-center">趋势追踪</h1>
+      <p className="text-center text-xs text-calm-400 -mt-3">{profileName} 的视角</p>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3">
@@ -92,6 +97,20 @@ export function TrendsPage() {
         )}
       </div>
 
+      {/* Share Card */}
+      <button
+        onClick={() => setShareOpen(true)}
+        className="card w-full text-left hover:border-apple/40 transition-colors flex items-center justify-between"
+      >
+        <div>
+          <h3 className="font-medium text-calm-800 mb-1">生成分享卡片</h3>
+          <p className="text-sm text-calm-500">把 {profileName} 的状态做成一张图，分享出去</p>
+        </div>
+        <span className="text-2xl">📤</span>
+      </button>
+
+      <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} />
+
       {/* Anxiety Chart */}
       {recentRecords.length >= 2 ? (
         <div className="card">
@@ -99,35 +118,35 @@ export function TrendsPage() {
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={recentRecords}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#ebe0d5" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fontSize: 10, fill: '#9b8b7e' }}
-                  axisLine={{ stroke: '#ebe0d5' }}
+                  tick={{ fontSize: 10, fill: '#86868b' }}
+                  axisLine={{ stroke: '#e0e0e0' }}
                   tickLine={false}
                 />
                 <YAxis
                   domain={[0, 10]}
                   ticks={[0, 2, 4, 6, 8, 10]}
-                  tick={{ fontSize: 10, fill: '#9b8b7e' }}
-                  axisLine={{ stroke: '#ebe0d5' }}
+                  tick={{ fontSize: 10, fill: '#86868b' }}
+                  axisLine={{ stroke: '#e0e0e0' }}
                   tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'white',
-                    border: '1px solid #ebe0d5',
-                    borderRadius: '12px',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: '18px',
                     fontSize: '12px',
-                    color: '#634432',
+                    color: '#1d1d1f',
                   }}
                 />
                 <Line
                   type="monotone"
                   dataKey="anxiety"
-                  stroke="#f19432"
+                  stroke="#0066cc"
                   strokeWidth={2.5}
-                  dot={{ fill: '#f19432', r: 4 }}
+                  dot={{ fill: '#0066cc', r: 4 }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>

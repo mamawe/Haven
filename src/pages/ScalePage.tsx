@@ -4,6 +4,7 @@ import {
   getQuickQuestions, normalizeQuickScore
 } from '../data/scale'
 import { addScaleResult } from '../utils/storage'
+import { useProfile } from '../context/ProfileContext'
 import type { ScaleQuestion } from '../types'
 
 type Phase = 'intro' | 'epds' | 'transition' | 'parenting' | 'result'
@@ -15,6 +16,7 @@ export function ScalePage() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [epdsAnswers, setEpdsAnswers] = useState<number[]>([])
   const [parentingAnswers, setParentingAnswers] = useState<number[]>([])
+  const { profileName } = useProfile()
 
   // 根据模式选择题目集
   const epdsSet = mode === 'full' ? epdsQuestions : getQuickQuestions(epdsQuestions)
@@ -208,8 +210,9 @@ export function ScalePage() {
     ]
 
     return (
-      <div className="px-4 py-6 space-y-5">
-        <h1 className="text-2xl font-serif text-calm-800 text-center">测评结果</h1>
+        <div className="px-4 py-6 space-y-5">
+          <h1 className="text-2xl font-serif text-calm-800 text-center">测评结果</h1>
+          <p className="text-center text-xs text-calm-400 -mt-3">{profileName} 的视角</p>
 
         <div className={`card ${getBgColor(overallLevel)} text-center`}>
           <span className="text-4xl block mb-2">{getMoodEmoji(overallLevel)}</span>

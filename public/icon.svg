@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#f5f0eb"/>
+  <circle cx="256" cy="256" r="150" fill="#ee7b11"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#bc8f65" stroke-width="8"/>
+  <path d="M256 170c-48 0-86 38-86 86 0 48 38 86 86 86s86-38 86-86c0-48-38-86-86-86zm0 36c28 0 50 22 50 50s-22 50-50 50-50-22-50-50 22-50 50-50z" fill="#fff"/>
+  <text x="256" y="290" font-size="96" text-anchor="middle" fill="#fff" font-family="PingFang SC, sans-serif">养</text>
+</svg>

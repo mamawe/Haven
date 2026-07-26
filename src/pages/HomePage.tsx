@@ -1,22 +1,38 @@
 import { useEffect, useState } from 'react'
-import { getLatestScaleResult, getBabyAgeInMonths, getBabyBirthday, setBabyBirthday } from '../utils/storage'
+import {
+  getLatestScaleResult, getBabyAgeInMonths, getBabyBirthday, setBabyBirthday,
+  getProfileName, type Profile,
+} from '../utils/storage'
+import { useProfile } from '../context/ProfileContext'
 import { ThemeSwitcher } from '../components/ThemeSwitcher'
+import { ProfileSwitcher } from '../components/ProfileSwitcher'
+import { DailyWhisper } from '../components/DailyWhisper'
+import { ShareCard } from '../components/ShareCard'
+import { TodayWindCard, WindDeck } from '../components/WindCard'
 import type { ScaleResult } from '../types'
 
 type Tab = 'home' | 'scale' | 'knowledge' | 'journal' | 'trends'
 
 export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
+  const { profile, profileName, setProfile } = useProfile()
   const [latestResult, setLatestResult] = useState<ScaleResult | null>(null)
   const [ageMonths, setAgeMonths] = useState<number | null>(null)
   const [showBirthdayInput, setShowBirthdayInput] = useState(false)
   const [birthdayInput, setBirthdayInput] = useState('')
+  const [shareOpen, setShareOpen] = useState(false)
+  const [showDeck, setShowDeck] = useState(false)
 
   useEffect(() => {
     setLatestResult(getLatestScaleResult())
     setAgeMonths(getBabyAgeInMonths())
     const bday = getBabyBirthday()
     if (!bday) setShowBirthdayInput(true)
-  }, [])
+  }, [profile])
+
+  // 伴侣视角：查看另一位档案的最近自测
+  const otherProfile: Profile = profile === 'me' ? 'partner' : 'me'
+  const otherResult = getLatestScaleResult(otherProfile)
+  const otherName = getProfileName(otherProfile)
 
   const handleSaveBirthday = () => {
     if (birthdayInput) {
@@ -38,15 +54,18 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
 
   return (
     <div className="px-4 py-6 space-y-5">
-      {/* Top bar with theme switcher */}
-      <div className="flex justify-end pt-1">
+      {/* Top bar: profile + theme switcher */}
+      <div className="flex justify-between items-center pt-1">
+        <ProfileSwitcher />
         <ThemeSwitcher />
       </div>
 
       {/* Header */}
       <div className="text-center pt-2 pb-1">
-        <h1 className="text-3xl font-serif text-calm-800 mb-1">安心养</h1>
-        <p className="text-calm-500 text-sm">育儿这条路，你不需要完美</p>
+        <h1 className="text-3xl font-serif text-calm-800 mb-1">锚点</h1>
+        <p className="text-calm-500 text-sm">
+          {profileName}，育儿这条路你不需要完美
+        </p>
         {ageMonths !== null && (
           <span className="inline-block mt-2 px-3 py-1 bg-calm-100 rounded-full text-xs text-calm-600 font-medium">
             宝宝 {ageMonths} 个月
@@ -73,11 +92,11 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         </div>
       )}
 
-      {/* Latest Assessment Result */}
+      {/* Latest Assessment Result (current profile) */}
       {latestResult ? (
         <div className="card cursor-pointer" onClick={() => onNavigate('trends')}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-calm-500">最近自测</h3>
+            <h3 className="text-sm font-medium text-calm-500">{profileName} · 最近自测</h3>
             <span className="text-xs text-calm-400">
               {new Date(latestResult.timestamp).toLocaleDateString('zh-CN')}
             </span>
@@ -99,13 +118,64 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-calm-800 mb-1">焦虑自测</h3>
+              <h3 className="font-medium text-calm-800 mb-1">{profileName} · 焦虑自测</h3>
               <p className="text-sm text-calm-500">了解自己的情绪状态，只需 3 分钟</p>
             </div>
             <span className="text-2xl">📋</span>
           </div>
         </button>
       )}
+
+      {/* Partner View Peek */}
+      {otherResult && (
+        <div className="card bg-calm-50/60 border-calm-100 cursor-pointer" onClick={() => setProfile(otherProfile)}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-calm-500">{otherName}的视角</span>
+            <span className="text-[11px] text-warm-500">切换查看 →</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{moodEmoji(otherResult.level)}</span>
+            <div>
+              <div className="text-sm font-medium text-calm-700">{otherResult.category}</div>
+              <div className={`text-xs ${getLevelColor(otherResult.level)}`}>
+                {getLevelLabel(otherResult.level)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 今日风向：用 12 张切片背景图轮换展示 */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-medium text-calm-500">今日风向</h3>
+          <button
+            onClick={() => setShowDeck(v => !v)}
+            className="text-xs font-medium text-apple active:scale-95 transition-transform"
+          >
+            {showDeck ? '收起卡库' : '查看全部 12 张'}
+          </button>
+        </div>
+        <TodayWindCard />
+        {showDeck && <WindDeck />}
+      </section>
+
+      {/* Daily Whisper + gentle reminder */}
+      <DailyWhisper />
+
+      {/* Share Card */}
+      <button
+        onClick={() => setShareOpen(true)}
+        className="card w-full text-left hover:border-apple/40 transition-colors flex items-center justify-between"
+      >
+        <div>
+          <h3 className="font-medium text-calm-800 mb-1">生成分享卡片</h3>
+          <p className="text-sm text-calm-500">把今天的状态做成一张图，分享给在意的人</p>
+        </div>
+        <span className="text-2xl">📤</span>
+      </button>
+
+      <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} />
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-3">
@@ -131,12 +201,6 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         </button>
       </div>
 
-      {/* Daily Quote */}
-      <div className="card bg-gradient-to-br from-calm-100/50 to-warm-50/50 border-calm-100">
-        <p className="text-sm text-calm-600 italic leading-relaxed">
-          "你不必成为完美的父母。你只需要成为'足够好'的父母——而那些不完美的时刻，恰恰是孩子学会面对真实世界的第一课。"
-        </p>
-      </div>
     </div>
   )
 }

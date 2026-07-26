@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { getTodayRecord, addDailyRecord } from '../utils/storage'
+import { useProfile } from '../context/ProfileContext'
 import type { DailyRecord } from '../types'
 
 export function JournalPage() {
+  const { profile, profileName } = useProfile()
   const today = new Date().toISOString().split('T')[0]
   const [record, setRecord] = useState<DailyRecord>({
     date: today,
@@ -17,7 +19,7 @@ export function JournalPage() {
     if (existing) {
       setRecord(existing)
     }
-  }, [])
+  }, [profile])
 
   const handleSave = () => {
     addDailyRecord(record)
@@ -36,7 +38,7 @@ export function JournalPage() {
     <div className="px-4 py-6 space-y-5">
       <h1 className="text-2xl font-serif text-calm-800 text-center">每日记录</h1>
       <p className="text-center text-sm text-calm-500 -mt-3">
-        {new Date().toLocaleDateString('zh-CN', { month:'long', day:'numeric', weekday:'long' })}
+        {profileName} · {new Date().toLocaleDateString('zh-CN', { month:'long', day:'numeric', weekday:'long' })}
       </p>
 
       {/* Mood */}
@@ -74,7 +76,7 @@ export function JournalPage() {
           onChange={e => setRecord(prev => ({ ...prev, anxiety: parseInt(e.target.value) }))}
           className="w-full h-2 bg-calm-200 rounded-full appearance-none cursor-pointer accent-warm-500"
           style={{
-            background: `linear-gradient(to right, #64b165 ${(record.anxiety - 1) * 11.1}%, #e5ddd3 ${(record.anxiety - 1) * 11.1}%)`
+            background: `linear-gradient(to right, #64b165 ${(record.anxiety - 1) * 11.1}%, #d2d2d7 ${(record.anxiety - 1) * 11.1}%)`
           }}
         />
         <div className="flex justify-between text-[10px] text-calm-400 mt-1">

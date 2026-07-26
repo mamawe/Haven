@@ -25,9 +25,12 @@ export interface DailyRecord {
   note?: string
 }
 
+export type Stage = 'prepregnancy' | 'pregnancy' | 'infant' | 'toddler'
+
 export interface KnowledgeItem {
   id: string
-  month: number       // 宝宝月龄 0-12
+  stage: Stage        // 备孕 / 孕期 / 0-1岁(infant) / 1-3岁(toddler)
+  month: number       // infant/toddler: 宝宝月龄; pregnancy: 1-3 代表早/中/晚孕; prepregnancy: 0
   category: 'sleep' | 'feeding' | 'development' | 'health' | 'mama'
   title: string
   summary: string

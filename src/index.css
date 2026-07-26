@@ -1,27 +1,35 @@
 @import "tailwindcss";
 
-@theme {
-  --color-calm-50: #faf8f5;
-  --color-calm-100: #f5f0eb;
-  --color-calm-200: #ebe0d5;
-  --color-calm-300: #dbc8b0;
-  --color-calm-400: #c9a887;
-  --color-calm-500: #bc8f65;
-  --color-calm-600: #af7a4f;
-  --color-calm-700: #926242;
-  --color-calm-800: #77503a;
-  --color-calm-900: #634432;
+/* ============================================================
+   抄级设计 applied: apple  ——  默认主题（calm）走 Apple 设计语言
+   - 单一强调色 Action Blue #0066cc
+   - 中性白/parchment 画布
+   - 卡片无装饰阴影、hairline 描边、rounded-[18px]
+   - 胶囊按钮、紧排标题（SF Pro tight）
+   ============================================================ */
 
-  --color-warm-50: #fef7ee;
-  --color-warm-100: #fdedd3;
-  --color-warm-200: #fad7a5;
-  --color-warm-300: #f6ba6d;
-  --color-warm-400: #f19432;
-  --color-warm-500: #ee7b11;
-  --color-warm-600: #df6007;
-  --color-warm-700: #b94809;
-  --color-warm-800: #93390e;
-  --color-warm-900: #77310f;
+@theme {
+  --color-calm-50: #ffffff;
+  --color-calm-100: #f5f5f7;
+  --color-calm-200: #e8e8ed;
+  --color-calm-300: #d2d2d7;
+  --color-calm-400: #86868b;
+  --color-calm-500: #515154;
+  --color-calm-600: #1d1d1f;
+  --color-calm-700: #1d1d1f;
+  --color-calm-800: #1d1d1f;
+  --color-calm-900: #1d1d1f;
+
+  --color-warm-50: #f5f5f7;
+  --color-warm-100: #e8e8ed;
+  --color-warm-200: #d2d2d7;
+  --color-warm-300: #2997ff;
+  --color-warm-400: #0071e3;
+  --color-warm-500: #0066cc;
+  --color-warm-600: #005bb5;
+  --color-warm-700: #004999;
+  --color-warm-800: #003d80;
+  --color-warm-900: #003066;
 
   --color-soft-green-50: #f2f9f2;
   --color-soft-green-100: #dff0df;
@@ -34,72 +42,85 @@
   --color-soft-green-800: #254e27;
   --color-soft-green-900: #1f4022;
 
-  --font-sans: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  --font-serif: "Noto Serif SC", "STSong", "SimSun", serif;
+  /* Apple token */
+  --color-apple: #0066cc;
+  --color-apple-focus: #0071e3;
+  --color-apple-ondark: #2997ff;
+  --color-ink: #1d1d1f;
+  --color-parchment: #f5f5f7;
+  --color-hairline: #e0e0e0;
+
+  --font-sans: "Inter", "PingFang SC", "Hiragino Sans GB", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  --font-serif: var(--font-sans);
 }
 
 @layer base {
   body {
-    @apply bg-calm-50 text-calm-900 font-sans antialiased;
+    @apply bg-white text-ink font-sans antialiased;
     -webkit-tap-highlight-color: transparent;
   }
 
   /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-calm-300 rounded-full;
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-calm-300 rounded-full; }
+
+  /* 把 font-serif 统一为 SF Pro tight sans（Apple 全 sans 系统） */
+  .font-serif {
+    font-family: var(--font-sans);
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
+  /* Apple 风格卡片：白底、hairline 描边、rounded-[18px]、无阴影、24px padding */
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-calm-100 p-5;
+    @apply bg-white rounded-[18px] border border-calm-200 p-6;
   }
 
+  /* Apple 胶囊主按钮：单一强调蓝 */
   .btn-primary {
-    @apply bg-warm-500 text-white font-medium rounded-xl px-6 py-3 
-           hover:bg-warm-600 active:scale-[0.98] transition-all 
+    @apply bg-warm-500 text-white font-medium rounded-full px-6 py-3
+           hover:bg-warm-600 active:scale-95 transition-all
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-ghost {
-    @apply text-calm-600 font-medium rounded-xl px-6 py-3 
-           hover:bg-calm-100 active:scale-[0.98] transition-all;
+    @apply text-calm-600 font-medium rounded-full px-6 py-3
+           hover:bg-calm-100 active:scale-95 transition-all;
   }
 
+  /* Apple search-input：胶囊、hairline */
   .input-field {
-    @apply w-full rounded-xl border border-calm-200 bg-white px-4 py-3 
-           text-calm-900 placeholder:text-calm-400 
+    @apply w-full rounded-full border border-calm-200 bg-white px-5 py-3
+           text-ink placeholder:text-calm-400
            focus:outline-none focus:ring-2 focus:ring-warm-400 focus:border-transparent
            transition-all;
   }
+
+  /* 抄级设计 applied: apple  ——  扩展工具类 */
+  .btn-apple {
+    @apply bg-apple text-white font-medium rounded-full px-6 py-3
+           active:scale-95 transition-all
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .card-apple {
+    @apply bg-white rounded-[18px] border border-hairline p-6;
+  }
+  .tracking-apple {
+    letter-spacing: -0.02em;
+  }
 }
 
-/* ============ 主题切换 ============ */
-/* 默认主题（calm）由 @theme 定义。以下为运行时可切换主题，
-   通过覆盖同名 CSS 变量实现整套配色联动。 */
+/* ============ 主题切换（备选主题，仍保留切换能力） ============ */
 
-/* 深海蓝 Ocean */
+/* 深海蓝 Ocean —— 中性骨架与默认 Apple 主题一致，仅强调色换青蓝（Apple 单色点题）*/
 [data-theme="ocean"] {
-  --color-calm-50: #f4f8fb;
-  --color-calm-100: #e8f1f7;
-  --color-calm-200: #d4e5ef;
-  --color-calm-300: #b3d0e0;
-  --color-calm-400: #84b3cc;
-  --color-calm-500: #5d97b5;
-  --color-calm-600: #477a98;
-  --color-calm-700: #3a637c;
-  --color-calm-800: #325268;
-  --color-calm-900: #2c4658;
+  --color-calm-100: #f1f6f8;
 
-  --color-warm-50: #effaf8;
-  --color-warm-100: #d4f1ec;
-  --color-warm-200: #a9e3da;
+  --color-warm-50: #f0f7f8;
+  --color-warm-100: #d9eef0;
+  --color-warm-200: #b3e0e3;
   --color-warm-300: #74cdc0;
   --color-warm-400: #3db0a1;
   --color-warm-500: #1f9486;
@@ -107,31 +128,11 @@
   --color-warm-700: #145d54;
   --color-warm-800: #134b44;
   --color-warm-900: #113e39;
-
-  --color-soft-green-50: #f0f8f4;
-  --color-soft-green-100: #dcefe3;
-  --color-soft-green-200: #bbe0c8;
-  --color-soft-green-300: #8ecaa6;
-  --color-soft-green-400: #5aac7e;
-  --color-soft-green-500: #3a8f60;
-  --color-soft-green-600: #2c734c;
-  --color-soft-green-700: #255c3e;
-  --color-soft-green-800: #214a34;
-  --color-soft-green-900: #1c3e2c;
 }
 
-/* 樱花粉 Blossom */
+/* 樱花粉 Blossom —— 中性骨架与默认 Apple 主题一致，仅强调色换樱粉 */
 [data-theme="blossom"] {
-  --color-calm-50: #fbf4f6;
-  --color-calm-100: #f6e9ed;
-  --color-calm-200: #ecd6de;
-  --color-calm-300: #dcbcc9;
-  --color-calm-400: #c79aae;
-  --color-calm-500: #b67d96;
-  --color-calm-600: #a3637e;
-  --color-calm-700: #854f66;
-  --color-calm-800: #6d4356;
-  --color-calm-900: #5b3a48;
+  --color-calm-100: #fbf3f6;
 
   --color-warm-50: #fdf0f4;
   --color-warm-100: #fbdde6;
@@ -143,15 +144,4 @@
   --color-warm-700: #a01c50;
   --color-warm-800: #851945;
   --color-warm-900: #6f183b;
-
-  --color-soft-green-50: #f3faf5;
-  --color-soft-green-100: #e1f5e6;
-  --color-soft-green-200: #c2ebcc;
-  --color-soft-green-300: #95d9a6;
-  --color-soft-green-400: #61bf7a;
-  --color-soft-green-500: #3fa356;
-  --color-soft-green-600: #318445;
-  --color-soft-green-700: #296a39;
-  --color-soft-green-800: #235432;
-  --color-soft-green-900: #1d4529;
 }

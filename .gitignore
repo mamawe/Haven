@@ -8,3 +8,6 @@ dist-ssr
 .env
 .env.*
 !.env.example
+
+# 本地 symlink 设计参考（抄级设计 skill），不入库
+DESIGN.md
