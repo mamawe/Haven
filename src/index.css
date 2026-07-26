@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+@theme {
+  --color-calm-50: #faf8f5;
+  --color-calm-100: #f5f0eb;
+  --color-calm-200: #ebe0d5;
+  --color-calm-300: #dbc8b0;
+  --color-calm-400: #c9a887;
+  --color-calm-500: #bc8f65;
+  --color-calm-600: #af7a4f;
+  --color-calm-700: #926242;
+  --color-calm-800: #77503a;
+  --color-calm-900: #634432;
+
+  --color-warm-50: #fef7ee;
+  --color-warm-100: #fdedd3;
+  --color-warm-200: #fad7a5;
+  --color-warm-300: #f6ba6d;
+  --color-warm-400: #f19432;
+  --color-warm-500: #ee7b11;
+  --color-warm-600: #df6007;
+  --color-warm-700: #b94809;
+  --color-warm-800: #93390e;
+  --color-warm-900: #77310f;
+
+  --color-soft-green-50: #f2f9f2;
+  --color-soft-green-100: #dff0df;
+  --color-soft-green-200: #c0e2c0;
+  --color-soft-green-300: #93cd94;
+  --color-soft-green-400: #64b165;
+  --color-soft-green-500: #439547;
+  --color-soft-green-600: #327b36;
+  --color-soft-green-700: #2a612e;
+  --color-soft-green-800: #254e27;
+  --color-soft-green-900: #1f4022;
+
+  --font-sans: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: "Noto Serif SC", "STSong", "SimSun", serif;
+}
+
+@layer base {
+  body {
+    @apply bg-calm-50 text-calm-900 font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-calm-300 rounded-full;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-calm-100 p-5;
+  }
+
+  .btn-primary {
+    @apply bg-warm-500 text-white font-medium rounded-xl px-6 py-3 
+           hover:bg-warm-600 active:scale-[0.98] transition-all 
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply text-calm-600 font-medium rounded-xl px-6 py-3 
+           hover:bg-calm-100 active:scale-[0.98] transition-all;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-calm-200 bg-white px-4 py-3 
+           text-calm-900 placeholder:text-calm-400 
+           focus:outline-none focus:ring-2 focus:ring-warm-400 focus:border-transparent
+           transition-all;
+  }
+}
+
+/* ============ 主题切换 ============ */
+/* 默认主题（calm）由 @theme 定义。以下为运行时可切换主题，
+   通过覆盖同名 CSS 变量实现整套配色联动。 */
+
+/* 深海蓝 Ocean */
+[data-theme="ocean"] {
+  --color-calm-50: #f4f8fb;
+  --color-calm-100: #e8f1f7;
+  --color-calm-200: #d4e5ef;
+  --color-calm-300: #b3d0e0;
+  --color-calm-400: #84b3cc;
+  --color-calm-500: #5d97b5;
+  --color-calm-600: #477a98;
+  --color-calm-700: #3a637c;
+  --color-calm-800: #325268;
+  --color-calm-900: #2c4658;
+
+  --color-warm-50: #effaf8;
+  --color-warm-100: #d4f1ec;
+  --color-warm-200: #a9e3da;
+  --color-warm-300: #74cdc0;
+  --color-warm-400: #3db0a1;
+  --color-warm-500: #1f9486;
+  --color-warm-600: #157569;
+  --color-warm-700: #145d54;
+  --color-warm-800: #134b44;
+  --color-warm-900: #113e39;
+
+  --color-soft-green-50: #f0f8f4;
+  --color-soft-green-100: #dcefe3;
+  --color-soft-green-200: #bbe0c8;
+  --color-soft-green-300: #8ecaa6;
+  --color-soft-green-400: #5aac7e;
+  --color-soft-green-500: #3a8f60;
+  --color-soft-green-600: #2c734c;
+  --color-soft-green-700: #255c3e;
+  --color-soft-green-800: #214a34;
+  --color-soft-green-900: #1c3e2c;
+}
+
+/* 樱花粉 Blossom */
+[data-theme="blossom"] {
+  --color-calm-50: #fbf4f6;
+  --color-calm-100: #f6e9ed;
+  --color-calm-200: #ecd6de;
+  --color-calm-300: #dcbcc9;
+  --color-calm-400: #c79aae;
+  --color-calm-500: #b67d96;
+  --color-calm-600: #a3637e;
+  --color-calm-700: #854f66;
+  --color-calm-800: #6d4356;
+  --color-calm-900: #5b3a48;
+
+  --color-warm-50: #fdf0f4;
+  --color-warm-100: #fbdde6;
+  --color-warm-200: #f6bcd0;
+  --color-warm-300: #ef8fb3;
+  --color-warm-400: #e45d92;
+  --color-warm-500: #d83b78;
+  --color-warm-600: #c12661;
+  --color-warm-700: #a01c50;
+  --color-warm-800: #851945;
+  --color-warm-900: #6f183b;
+
+  --color-soft-green-50: #f3faf5;
+  --color-soft-green-100: #e1f5e6;
+  --color-soft-green-200: #c2ebcc;
+  --color-soft-green-300: #95d9a6;
+  --color-soft-green-400: #61bf7a;
+  --color-soft-green-500: #3fa356;
+  --color-soft-green-600: #318445;
+  --color-soft-green-700: #296a39;
+  --color-soft-green-800: #235432;
+  --color-soft-green-900: #1d4529;
+}
