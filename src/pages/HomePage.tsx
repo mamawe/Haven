@@ -8,7 +8,6 @@ import { ThemeSwitcher } from '../components/ThemeSwitcher'
 import { ProfileSwitcher } from '../components/ProfileSwitcher'
 import { DailyWhisper } from '../components/DailyWhisper'
 import { ShareCard } from '../components/ShareCard'
-import { TodayWindCard, WindDeck } from '../components/WindCard'
 import type { ScaleResult } from '../types'
 
 type Tab = 'home' | 'scale' | 'knowledge' | 'journal' | 'trends'
@@ -20,7 +19,6 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const [showBirthdayInput, setShowBirthdayInput] = useState(false)
   const [birthdayInput, setBirthdayInput] = useState('')
   const [shareOpen, setShareOpen] = useState(false)
-  const [showDeck, setShowDeck] = useState(false)
 
   useEffect(() => {
     setLatestResult(getLatestScaleResult())
@@ -144,21 +142,6 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
           </div>
         </div>
       )}
-
-      {/* 今日风向：用 12 张切片背景图轮换展示 */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-calm-500">今日风向</h3>
-          <button
-            onClick={() => setShowDeck(v => !v)}
-            className="text-xs font-medium text-apple active:scale-95 transition-transform"
-          >
-            {showDeck ? '收起卡库' : '查看全部 12 张'}
-          </button>
-        </div>
-        <TodayWindCard />
-        {showDeck && <WindDeck />}
-      </section>
 
       {/* Daily Whisper + gentle reminder */}
       <DailyWhisper />
