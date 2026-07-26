@@ -1,7 +1,7 @@
 {
-  "name": "锚点 · 缓解育儿焦虑",
-  "short_name": "锚点",
-  "description": "0-3岁育儿焦虑缓解工具：焦虑自测、知识库、每日记录、焦虑急救箱",
+  "name": "锚点 Haven · 缓解育儿焦虑 / Parenting Anxiety Relief",
+  "short_name": "锚点 / Haven",
+  "description": "0-3岁育儿焦虑缓解工具：焦虑自测、知识库、每日记录、焦虑急救箱 | A parenting-anxiety toolkit: self-checks, knowledge base, daily journal, first-aid kit",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f0eb",

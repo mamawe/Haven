@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useProfile } from '../context/ProfileContext'
 import { getProfileName, type Profile } from '../utils/storage'
+import { useI18n } from '../i18n'
 import { ProfileSettingsModal } from './ProfileSettingsModal'
 
 const ORDER: Profile[] = ['me', 'partner']
@@ -8,6 +9,7 @@ const ORDER: Profile[] = ['me', 'partner']
 export function ProfileSwitcher() {
   const { profile, setProfile } = useProfile()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const { t } = useI18n()
 
   return (
     <>
@@ -32,7 +34,7 @@ export function ProfileSwitcher() {
         </div>
         <button
           onClick={() => setSettingsOpen(true)}
-          aria-label="编辑称呼"
+          aria-label={t('profile.editAria')}
           className="w-7 h-7 rounded-full bg-calm-100 text-calm-500 flex items-center justify-center text-xs hover:bg-calm-200 transition-colors"
         >
           ✎

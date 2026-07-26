@@ -5,7 +5,8 @@ import {
 } from '../data/scale'
 import { addScaleResult } from '../utils/storage'
 import { useProfile } from '../context/ProfileContext'
-import type { ScaleQuestion } from '../types'
+import { useI18n } from '../i18n'
+import type { ScaleQuestion, Localized } from '../types'
 
 type Phase = 'intro' | 'epds' | 'transition' | 'parenting' | 'result'
 type Mode = 'full' | 'quick'
@@ -17,6 +18,7 @@ export function ScalePage() {
   const [epdsAnswers, setEpdsAnswers] = useState<number[]>([])
   const [parentingAnswers, setParentingAnswers] = useState<number[]>([])
   const { profileName } = useProfile()
+  const { t, L, lang } = useI18n()
 
   // 根据模式选择题目集
   const epdsSet = mode === 'full' ? epdsQuestions : getQuickQuestions(epdsQuestions)
@@ -72,7 +74,10 @@ export function ScalePage() {
     addScaleResult({
       totalScore: epdsTotal + parentingTotal,
       level: overallLevel,
-      category: `${epdsResult.label} · ${parentingResult.label}`,
+      category: {
+        zh: `${epdsResult.label.zh} · ${parentingResult.label.zh}`,
+        en: `${epdsResult.label.en} · ${parentingResult.label.en}`,
+      },
       suggestions: [
         ...getSuggestions('epds', epdsResult.level),
         ...getSuggestions('parenting', parentingResult.level),
@@ -85,7 +90,7 @@ export function ScalePage() {
   if (phase === 'intro') {
     return (
       <div className="px-4 py-6 space-y-5">
-        <h1 className="text-2xl font-serif text-calm-800 text-center">焦虑自测</h1>
+        <h1 className="text-2xl font-serif text-calm-800 text-center">{t('scale.title')}</h1>
 
         <div className="card space-y-4">
           <div className="text-center">
@@ -94,28 +99,28 @@ export function ScalePage() {
 
           {/* 明确提示两段式结构 */}
           <div className="bg-warm-50 rounded-xl p-4 space-y-3">
-            <p className="text-center text-sm font-medium text-calm-700">本测试分为 <span className="text-warm-600">两个部分</span>，请按顺序完成：</p>
+            <p className="text-center text-sm font-medium text-calm-700">{t('scale.twoParts')}</p>
             <div className="flex items-center gap-3">
               <div className="flex-1 bg-white rounded-lg p-3 text-center border border-warm-200">
                 <div className="text-lg mb-1">1️⃣</div>
-                <div className="text-sm font-medium text-calm-800">Part 1 · 情绪状态</div>
-                <div className="text-xs text-calm-500 mt-0.5">产后情绪筛查</div>
+                <div className="text-sm font-medium text-calm-800">{t('scale.part1')}</div>
+                <div className="text-xs text-calm-500 mt-0.5">{t('scale.part1sub')}</div>
               </div>
               <div className="text-calm-400">→</div>
               <div className="flex-1 bg-white rounded-lg p-3 text-center border border-warm-200">
                 <div className="text-lg mb-1">2️⃣</div>
-                <div className="text-sm font-medium text-calm-800">Part 2 · 育儿焦虑</div>
-                <div className="text-xs text-calm-500 mt-0.5">带娃具体焦虑</div>
+                <div className="text-sm font-medium text-calm-800">{t('scale.part2')}</div>
+                <div className="text-xs text-calm-500 mt-0.5">{t('scale.part2sub')}</div>
               </div>
             </div>
             <p className="text-xs text-calm-500 text-center">
-              两部分之间有明确的分段提示，做完 Part 1 会先停留再进入 Part 2
+              {t('scale.twoPartsHint')}
             </p>
           </div>
 
           {/* 模式选择 */}
           <div>
-            <p className="text-sm font-medium text-calm-700 mb-2">选择测试长度</p>
+            <p className="text-sm font-medium text-calm-700 mb-2">{t('scale.chooseLength')}</p>
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setMode('full')}
@@ -125,9 +130,9 @@ export function ScalePage() {
                     : 'border-calm-200 hover:border-calm-300'
                 }`}
               >
-                <div className="text-sm font-medium text-calm-800">标准版</div>
-                <div className="text-xs text-calm-500 mt-0.5">每部分 10 题 · 约 4 分钟</div>
-                <div className="text-[10px] text-calm-400 mt-1">完整量表，结果最可靠</div>
+                <div className="text-sm font-medium text-calm-800">{t('scale.standard')}</div>
+                <div className="text-xs text-calm-500 mt-0.5">{t('scale.standardDesc')}</div>
+                <div className="text-[10px] text-calm-400 mt-1">{t('scale.standardNote')}</div>
               </button>
               <button
                 onClick={() => setMode('quick')}
@@ -137,22 +142,22 @@ export function ScalePage() {
                     : 'border-calm-200 hover:border-calm-300'
                 }`}
               >
-                <div className="text-sm font-medium text-calm-800">快速版</div>
-                <div className="text-xs text-calm-500 mt-0.5">每部分 7 题 · 约 2 分钟</div>
-                <div className="text-[10px] text-calm-400 mt-1">精选高区分度题目</div>
+                <div className="text-sm font-medium text-calm-800">{t('scale.quick')}</div>
+                <div className="text-xs text-calm-500 mt-0.5">{t('scale.quickDesc')}</div>
+                <div className="text-[10px] text-calm-400 mt-1">{t('scale.quickNote')}</div>
               </button>
             </div>
           </div>
 
           <div className="bg-calm-50 rounded-xl p-3 text-xs text-calm-600 leading-relaxed">
-            ⚠️ 本测试为自测工具，不能替代专业心理评估。如果持续感到情绪低落，请咨询专业医生。
+            {t('scale.disclaimer')}
           </div>
 
           <button
             onClick={() => { setPhase('epds'); setCurrentQuestion(0) }}
             className="btn-primary w-full text-center"
           >
-            开始测试（{mode === 'full' ? '标准版 20 题' : '快速版 14 题'}）
+            {t('scale.start')}（{mode === 'full' ? t('scale.startStandard') : t('scale.startQuick')}）
           </button>
         </div>
       </div>
@@ -166,24 +171,23 @@ export function ScalePage() {
         <div className="card text-center space-y-5 py-10">
           <div className="text-5xl">✅</div>
           <div>
-            <h2 className="text-xl font-serif text-calm-800">Part 1 完成</h2>
-            <p className="text-sm text-calm-500 mt-1">情绪状态筛查已作答</p>
+            <h2 className="text-xl font-serif text-calm-800">{t('scale.part1done')}</h2>
+            <p className="text-sm text-calm-500 mt-1">{t('scale.part1doneSub')}</p>
           </div>
           <div className="flex items-center justify-center gap-2 text-xs">
-            <span className="px-3 py-1 bg-soft-green-100 text-soft-green-700 rounded-full font-medium">✓ Part 1 情绪状态</span>
+            <span className="px-3 py-1 bg-soft-green-100 text-soft-green-700 rounded-full font-medium">{t('scale.part1tag')}</span>
             <span className="text-calm-300">→</span>
-            <span className="px-3 py-1 bg-warm-100 text-warm-700 rounded-full font-medium">Part 2 育儿焦虑</span>
+            <span className="px-3 py-1 bg-warm-100 text-warm-700 rounded-full font-medium">{t('scale.part2tag')}</span>
           </div>
           <div className="bg-calm-50 rounded-xl p-4 text-sm text-calm-600 leading-relaxed">
-            接下来是 <strong className="text-calm-800">Part 2 · 育儿焦虑</strong>，
-            聚焦你在带娃过程中的具体焦虑点。
-            {mode === 'quick' && <span className="block mt-2 text-xs text-calm-500">快速版剩余 {totalParenting} 题</span>}
+            {t('scale.part2intro')}
+            {mode === 'quick' && <span className="block mt-2 text-xs text-calm-500">{t('scale.part2remain').replace('{n}', String(totalParenting))}</span>}
           </div>
           <button
             onClick={() => { setPhase('parenting'); setCurrentQuestion(0) }}
             className="btn-primary w-full text-center"
           >
-            进入 Part 2 →
+            {t('scale.enterPart2')}
           </button>
         </div>
       </div>
@@ -204,46 +208,46 @@ export function ScalePage() {
     const epdsResult = evaluateScore('epds', epdsTotal)
     const parentingResult = evaluateScore('parenting', parentingTotal)
     const overallLevel = getOverallLevel(epdsResult.level, parentingResult.level)
-    const suggestions = [
+    const suggestions: Localized[] = [
       ...getSuggestions('epds', epdsResult.level),
       ...getSuggestions('parenting', parentingResult.level),
     ]
 
     return (
         <div className="px-4 py-6 space-y-5">
-          <h1 className="text-2xl font-serif text-calm-800 text-center">测评结果</h1>
-          <p className="text-center text-xs text-calm-400 -mt-3">{profileName} 的视角</p>
+          <h1 className="text-2xl font-serif text-calm-800 text-center">{t('scale.result')}</h1>
+          <p className="text-center text-xs text-calm-400 -mt-3">{t('scale.viewOf').replace('{name}', profileName)}</p>
 
         <div className={`card ${getBgColor(overallLevel)} text-center`}>
           <span className="text-4xl block mb-2">{getMoodEmoji(overallLevel)}</span>
           <div className={`text-xl font-medium ${getTextColor(overallLevel)}`}>
-            {getLevelLabel(overallLevel)}
+            {t(`scale.level.${overallLevel}`)}
           </div>
           <div className="text-xs text-calm-500 mt-1">
-            {mode === 'full' ? '标准版（20 题）' : '快速版（14 题）'} · 仅供自我参考
+            {mode === 'full' ? t('scale.fullLabel') : t('scale.quickLabel')} · {t('scale.selfRef')}
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className={`card text-center ${epdsResult.bgColor}`}>
-            <div className="text-xs text-calm-500 mb-1">情绪状态（Part 1）</div>
+            <div className="text-xs text-calm-500 mb-1">{t('scale.part1Score')}</div>
             <div className="text-2xl font-bold text-calm-800">{epdsTotal}<span className="text-sm text-calm-400 font-normal">/30</span></div>
-            <div className={`text-sm mt-1 ${epdsResult.color} font-medium`}>{epdsResult.label}</div>
+            <div className={`text-sm mt-1 ${epdsResult.color} font-medium`}>{L(epdsResult.label)}</div>
           </div>
           <div className={`card text-center ${parentingResult.bgColor}`}>
-            <div className="text-xs text-calm-500 mb-1">育儿焦虑（Part 2）</div>
+            <div className="text-xs text-calm-500 mb-1">{t('scale.part2Score')}</div>
             <div className="text-2xl font-bold text-calm-800">{parentingTotal}<span className="text-sm text-calm-400 font-normal">/30</span></div>
-            <div className={`text-sm mt-1 ${parentingResult.color} font-medium`}>{parentingResult.label}</div>
+            <div className={`text-sm mt-1 ${parentingResult.color} font-medium`}>{L(parentingResult.label)}</div>
           </div>
         </div>
 
         <div className="card space-y-3">
-          <h3 className="font-medium text-calm-800 text-sm">给你的建议</h3>
+          <h3 className="font-medium text-calm-800 text-sm">{t('scale.suggestions')}</h3>
           <ul className="space-y-2">
             {suggestions.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-calm-700 leading-relaxed">
                 <span className="text-warm-500 mt-0.5">•</span>
-                <span>{s}</span>
+                <span>{L(s)}</span>
               </li>
             ))}
           </ul>
@@ -252,13 +256,13 @@ export function ScalePage() {
         {(overallLevel === 'high' || overallLevel === 'severe') && (
           <div className="card bg-red-50 border-red-200 text-center">
             <p className="text-sm text-red-700 font-medium mb-2">
-              你的分数提示需要关注心理健康
+              {t('scale.highAlert')}
             </p>
             <p className="text-xs text-red-600 mb-3">
-              全国心理援助热线：<strong>400-161-9995</strong>
+              {t('scale.hotline')}<strong>400-161-9995</strong>
             </p>
             <p className="text-xs text-red-500">
-              求助不是软弱，是保护自己和宝宝的第一步。
+              {t('scale.seekHelp')}
             </p>
           </div>
         )}
@@ -267,7 +271,7 @@ export function ScalePage() {
           onClick={() => { setPhase('intro'); setEpdsAnswers([]); setParentingAnswers([]); setMode('full') }}
           className="btn-ghost w-full text-center"
         >
-          重新测试
+          {t('scale.retake')}
         </button>
       </div>
     )
@@ -278,7 +282,7 @@ export function ScalePage() {
   const questions = isEPDS ? epdsSet : parentingSet
   const total = isEPDS ? totalEPDS : totalParenting
   const q: ScaleQuestion = questions[currentQuestion]
-  const partLabel = isEPDS ? 'Part 1 / 2 · 情绪状态' : 'Part 2 / 2 · 育儿焦虑'
+  const partLabel = isEPDS ? t('scale.partLabel1') : t('scale.partLabel2')
   const partNum = isEPDS ? 1 : 2
 
   return (
@@ -302,16 +306,16 @@ export function ScalePage() {
           />
         </div>
         {partNum === 2 && (
-          <p className="text-[11px] text-warm-600">这是 Part 2，关注带娃过程中的具体焦虑</p>
+          <p className="text-[11px] text-warm-600">{t('scale.part2hint')}</p>
         )}
       </div>
 
       <div className="card">
         <p className="text-lg text-calm-800 leading-relaxed font-serif mb-5">
-          {q.text}
+          {L(q.text)}
         </p>
         <div className="space-y-2">
-          {q.options.map((opt: { score: number; label: string }, i: number) => (
+          {q.options.map((opt: { score: number; label: Localized }, i: number) => (
             <button
               key={i}
               onClick={() => handleSelect(opt.score)}
@@ -319,7 +323,7 @@ export function ScalePage() {
                          hover:border-warm-400 hover:bg-warm-50 active:bg-warm-100
                          transition-all text-sm text-calm-700"
             >
-              {opt.label}
+              {L(opt.label)}
             </button>
           ))}
         </div>
@@ -346,16 +350,6 @@ function getTextColor(level: string): string {
     case 'high': return 'text-orange-600'
     case 'severe': return 'text-red-600'
     default: return 'text-calm-800'
-  }
-}
-
-function getLevelLabel(level: string): string {
-  switch (level) {
-    case 'low': return '整体状态良好'
-    case 'moderate': return '轻度焦虑，建议自我关怀'
-    case 'high': return '焦虑偏高，建议寻求支持'
-    case 'severe': return '建议寻求专业帮助'
-    default: return ''
   }
 }
 

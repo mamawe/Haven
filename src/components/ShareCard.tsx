@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useProfile } from '../context/ProfileContext'
 import { getLatestScaleResult, getTodayRecord, getProfileName } from '../utils/storage'
 import { getWhisperForDate } from '../data/whispers'
+import { useI18n } from '../i18n'
 
 const WHITE = '#ffffff'
 const WHITE_90 = 'rgba(255,255,255,0.90)'
@@ -12,15 +13,6 @@ function padNo(no: number): string {
   return String(no).padStart(2, '0')
 }
 
-function levelLabel(level: string): string {
-  switch (level) {
-    case 'low': return '状态良好'
-    case 'moderate': return '轻度焦虑'
-    case 'high': return '焦虑偏高'
-    case 'severe': return '需要关注'
-    default: return ''
-  }
-}
 function moodEmoji(level: string): string {
   switch (level) {
     case 'low': return '😊'
@@ -35,6 +27,7 @@ const CARD_COUNT = 12
 
 export function ShareCard({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { profile } = useProfile()
+  const { lang, t, L } = useI18n()
   const [saved, setSaved] = useState(false)
   const [bgIndex, setBgIndex] = useState(0) // 0-11，对应 cards/01..12
 
@@ -44,21 +37,24 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   const result = getLatestScaleResult(profile)
   const today = getTodayRecord(profile)
   const whisper = getWhisperForDate()
-  const dateStr = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
+  const dateLocale = lang === 'zh' ? 'zh-CN' : 'en-US'
+  const dateStr = new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })
+  const appName = t('app.name')
 
   let statusEmoji = '🌿'
-  let statusText = '今天也在好好照顾自己'
+  let statusText = t('share.statusDefault')
   if (result) {
     statusEmoji = moodEmoji(result.level)
-    statusText = levelLabel(result.level)
+    statusText = t(`trends.level.${result.level}`)
   } else if (today) {
     const moodMap = ['😫', '😟', '😐', '🙂', '😊']
     statusEmoji = moodMap[today.mood - 1] || '🌿'
-    statusText = `今日焦虑 ${today.anxiety}/10`
+    statusText = t('share.anxietyToday').replace('{n}', String(today.anxiety))
   }
 
   const bgNo = bgIndex + 1
   const bgPath = `/cards/${padNo(bgNo)}.jpg`
+  const subHeader = t('share.todayStatus').replace('{name}', name)
 
   const drawCard = () => {
     const W = 1080
@@ -91,10 +87,10 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
       // 顶部 wordmark
       ctx.fillStyle = WHITE
       ctx.font = '600 46px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
-      ctx.fillText('锚点', W / 2, 110)
+      ctx.fillText(appName, W / 2, 110)
       ctx.fillStyle = WHITE_75
       ctx.font = '400 28px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
-      ctx.fillText(`${name} · 今日状态`, W / 2, 158)
+      ctx.fillText(subHeader, W / 2, 158)
 
       // 中央 emoji
       ctx.font = '170px "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'
@@ -108,7 +104,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
       // 今日一句（自动换行）
       ctx.fillStyle = WHITE_90
       ctx.font = '400 32px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
-      wrapText(ctx, `“${whisper}”`, W / 2, 760, W - 200, 48)
+      wrapText(ctx, `“${L(whisper)}”`, W / 2, 760, W - 200, 48)
 
       // 底部：日期 + 标语
       ctx.fillStyle = WHITE_60
@@ -116,14 +112,15 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
       ctx.fillText(dateStr, W / 2, H - 120)
       ctx.fillStyle = WHITE
       ctx.font = '400 26px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
-      ctx.fillText('育儿这条路，你不需要完美', W / 2, H - 75)
+      ctx.fillText(t('share.tagline'), W / 2, H - 75)
 
       canvas.toBlob(blob => {
         if (!blob) return
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = `锚点-${name}-${new Date().toISOString().slice(0, 10)}.png`
+        const ext = lang === 'zh' ? name : name
+        a.download = `${appName}-${ext}-${new Date().toISOString().slice(0, 10)}.png`
         a.click()
         URL.revokeObjectURL(url)
         setSaved(true)
@@ -136,7 +133,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   return (
     <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
       <div className="card-apple w-full max-w-sm max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold text-ink tracking-apple mb-3 text-center">分享卡片</h3>
+        <h3 className="text-lg font-semibold text-ink tracking-apple mb-3 text-center">{t('share.title')}</h3>
 
         {/* 预览：背景图 + 暗蒙版 + 白字，与导出一致 */}
         <div className="relative rounded-[18px] overflow-hidden border border-hairline aspect-[4/5] bg-calm-100 select-none">
@@ -144,24 +141,24 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/45" />
           <div className="absolute inset-0 p-5 flex flex-col justify-between text-white">
             <div className="flex items-center justify-between text-[11px]">
-              <span className="font-semibold tracking-apple">锚点</span>
-              <span className="opacity-90">{name} · 今日状态</span>
+              <span className="font-semibold tracking-apple">{appName}</span>
+              <span className="opacity-90">{subHeader}</span>
             </div>
             <div className="text-center">
               <div className="text-6xl">{statusEmoji}</div>
               <div className="text-lg font-semibold tracking-apple mt-1">{statusText}</div>
             </div>
             <div className="text-center space-y-1">
-              <p className="text-sm leading-relaxed px-1">“{whisper}”</p>
+              <p className="text-sm leading-relaxed px-1">“{L(whisper)}”</p>
               <div className="text-[11px] opacity-80">{dateStr}</div>
-              <div className="text-[11px] font-medium">育儿这条路，你不需要完美</div>
+              <div className="text-[11px] font-medium">{t('share.tagline')}</div>
             </div>
           </div>
         </div>
 
         {/* 背景选择 */}
         <div className="mt-3">
-          <p className="text-xs text-calm-500 mb-2">选择卡片背景</p>
+          <p className="text-xs text-calm-500 mb-2">{t('share.chooseBg')}</p>
           <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
             {Array.from({ length: CARD_COUNT }, (_, i) => i + 1).map(n => (
               <button
@@ -179,10 +176,10 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
 
         <div className="flex gap-3 mt-4">
           <button onClick={onClose} className="btn-ghost flex-1 border border-hairline">
-            关闭
+            {t('share.close')}
           </button>
           <button onClick={drawCard} className="btn-apple flex-1">
-            {saved ? '已保存 ✓' : '保存图片'}
+            {saved ? t('share.saved') : t('share.saveImg')}
           </button>
         </div>
       </div>

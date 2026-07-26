@@ -35,6 +35,11 @@ function todayStr(): string {
   return new Date().toISOString().split('T')[0]
 }
 
+function currentLang(): 'zh' | 'en' {
+  const saved = localStorage.getItem('parent-calm-lang')
+  return saved === 'en' ? 'en' : 'zh'
+}
+
 function alreadyShownToday(): boolean {
   return localStorage.getItem(KEY_LAST_SHOWN) === todayStr()
 }
@@ -46,8 +51,11 @@ function markShown() {
 export function fireNotification() {
   if (!notificationSupported()) return
   const reg = (navigator.serviceWorker as any).registration as ServiceWorkerRegistration | undefined
-  const body = getWhisperForDate()
-  const title = '锚点 · 今日一句'
+  const lang = currentLang()
+  const whisper = getWhisperForDate()
+  const body = lang === 'zh' ? whisper.zh : whisper.en
+  const appName = lang === 'zh' ? '锚点' : 'Haven'
+  const title = lang === 'zh' ? '锚点 · 今日一句' : 'Haven · Daily Whisper'
   const options: NotificationOptions = {
     body,
     icon: '/icon.svg',

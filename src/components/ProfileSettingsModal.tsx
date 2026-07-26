@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { getProfileName, setProfileName, type Profile } from '../utils/storage'
+import { useI18n } from '../i18n'
 
 export function ProfileSettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [me, setMe] = useState('')
   const [partner, setPartner] = useState('')
+  const { t } = useI18n()
 
   useEffect(() => {
     if (open) {
@@ -15,8 +17,8 @@ export function ProfileSettingsModal({ open, onClose }: { open: boolean; onClose
   if (!open) return null
 
   const handleSave = () => {
-    const meName = me.trim() || '我'
-    const partnerName = partner.trim() || '伴侣'
+    const meName = me.trim() || t('profile.placeholderMe')
+    const partnerName = partner.trim() || t('profile.placeholderPartner')
     setProfileName('me' as Profile, meName)
     setProfileName('partner' as Profile, partnerName)
     onClose()
@@ -31,27 +33,27 @@ export function ProfileSettingsModal({ open, onClose }: { open: boolean; onClose
         className="card-apple w-full max-w-sm mx-4 mb-0 sm:mb-4 rounded-b-none sm:rounded-[18px]"
         onClick={e => e.stopPropagation()}
       >
-        <h3 className="text-lg font-semibold text-ink tracking-apple mb-1">档案称呼</h3>
-        <p className="text-xs text-calm-500 mb-5">给两个视角起个你喜欢的名字</p>
+        <h3 className="text-lg font-semibold text-ink tracking-apple mb-1">{t('profile.title')}</h3>
+        <p className="text-xs text-calm-500 mb-5">{t('profile.sub')}</p>
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-calm-700 block mb-1.5">我的视角</label>
+            <label className="text-sm font-medium text-calm-700 block mb-1.5">{t('profile.me')}</label>
             <input
               value={me}
               onChange={e => setMe(e.target.value)}
               maxLength={8}
-              placeholder="我"
+              placeholder={t('profile.placeholderMe')}
               className="input-field rounded-full"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-calm-700 block mb-1.5">伴侣的视角</label>
+            <label className="text-sm font-medium text-calm-700 block mb-1.5">{t('profile.partner')}</label>
             <input
               value={partner}
               onChange={e => setPartner(e.target.value)}
               maxLength={8}
-              placeholder="伴侣"
+              placeholder={t('profile.placeholderPartner')}
               className="input-field rounded-full"
             />
           </div>
@@ -59,10 +61,10 @@ export function ProfileSettingsModal({ open, onClose }: { open: boolean; onClose
 
         <div className="flex gap-3 mt-6">
           <button onClick={onClose} className="btn-ghost flex-1 border border-hairline">
-            取消
+            {t('profile.cancel')}
           </button>
           <button onClick={handleSave} className="btn-apple flex-1">
-            保存
+            {t('profile.save')}
           </button>
         </div>
       </div>

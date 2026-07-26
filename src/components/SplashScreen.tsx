@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '../i18n'
 
 interface SplashProps {
   onDone: () => void
@@ -7,6 +8,7 @@ interface SplashProps {
 
 export function SplashScreen({ onDone, duration = 2000 }: SplashProps) {
   const [hiding, setHiding] = useState(false)
+  const { t } = useI18n()
 
   useEffect(() => {
     const fadeT = setTimeout(() => setHiding(true), duration - 300)
@@ -28,7 +30,7 @@ export function SplashScreen({ onDone, duration = 2000 }: SplashProps) {
         <source srcSet="/splash.webp" type="image/webp" />
         <img
           src="/splash.jpg"
-          alt="锚点"
+          alt={t('app.name')}
           className="max-h-full max-w-full object-contain select-none"
           draggable={false}
         />

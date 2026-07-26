@@ -5,15 +5,16 @@ import {
 } from '../utils/storage'
 import { useProfile } from '../context/ProfileContext'
 import { ThemeSwitcher } from '../components/ThemeSwitcher'
+import { LangSwitcher } from '../components/LangSwitcher'
 import { ProfileSwitcher } from '../components/ProfileSwitcher'
 import { DailyWhisper } from '../components/DailyWhisper'
 import { ShareCard } from '../components/ShareCard'
-import type { ScaleResult } from '../types'
-
-type Tab = 'home' | 'scale' | 'knowledge' | 'journal' | 'trends'
+import { useI18n } from '../i18n'
+import type { ScaleResult, Tab } from '../types'
 
 export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const { profile, profileName, setProfile } = useProfile()
+  const { t, L, lang } = useI18n()
   const [latestResult, setLatestResult] = useState<ScaleResult | null>(null)
   const [ageMonths, setAgeMonths] = useState<number | null>(null)
   const [showBirthdayInput, setShowBirthdayInput] = useState(false)
@@ -50,23 +51,29 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
     }
   }
 
+  const fmtDate = (ts: number) =>
+    new Date(ts).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US')
+
   return (
     <div className="px-4 py-6 space-y-5">
-      {/* Top bar: profile + theme switcher */}
-      <div className="flex justify-between items-center pt-1">
+      {/* Top bar: profile + language + theme switcher */}
+      <div className="flex justify-between items-center pt-1 gap-2">
         <ProfileSwitcher />
-        <ThemeSwitcher />
+        <div className="flex items-center gap-2">
+          <LangSwitcher />
+          <ThemeSwitcher />
+        </div>
       </div>
 
       {/* Header */}
       <div className="text-center pt-2 pb-1">
-        <h1 className="text-3xl font-serif text-calm-800 mb-1">锚点</h1>
+        <h1 className="text-3xl font-serif text-calm-800 mb-1">{t('app.name')}</h1>
         <p className="text-calm-500 text-sm">
-          {profileName}，育儿这条路你不需要完美
+          {profileName}，{t('home.subtitle')}
         </p>
         {ageMonths !== null && (
           <span className="inline-block mt-2 px-3 py-1 bg-calm-100 rounded-full text-xs text-calm-600 font-medium">
-            宝宝 {ageMonths} 个月
+            {t('home.babyAge').replace('{n}', String(ageMonths))}
           </span>
         )}
       </div>
@@ -74,7 +81,7 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       {/* Birthday Input Modal */}
       {showBirthdayInput && (
         <div className="card bg-warm-50 border-warm-200">
-          <p className="text-sm text-calm-700 mb-3 font-medium">设置宝宝生日，获取个性化内容</p>
+          <p className="text-sm text-calm-700 mb-3 font-medium">{t('home.setBabyBirthday')}</p>
           <div className="flex gap-2">
             <input
               type="date"
@@ -84,7 +91,7 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
               max={new Date().toISOString().split('T')[0]}
             />
             <button onClick={handleSaveBirthday} className="btn-primary text-sm py-2 px-4" disabled={!birthdayInput}>
-              确定
+              {t('home.confirm')}
             </button>
           </div>
         </div>
@@ -94,17 +101,15 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       {latestResult ? (
         <div className="card cursor-pointer" onClick={() => onNavigate('trends')}>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-calm-500">{profileName} · 最近自测</h3>
-            <span className="text-xs text-calm-400">
-              {new Date(latestResult.timestamp).toLocaleDateString('zh-CN')}
-            </span>
+            <h3 className="text-sm font-medium text-calm-500">{t('home.recentSelfTest').replace('{name}', profileName)}</h3>
+            <span className="text-xs text-calm-400">{fmtDate(latestResult.timestamp)}</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-3xl">{moodEmoji(latestResult.level)}</span>
             <div>
-              <div className="text-lg font-medium text-calm-800">{latestResult.category}</div>
+              <div className="text-lg font-medium text-calm-800">{L(latestResult.category)}</div>
               <div className={`text-sm ${getLevelColor(latestResult.level)}`}>
-                {getLevelLabel(latestResult.level)}
+                {t(`scale.level.${latestResult.level}`)}
               </div>
             </div>
           </div>
@@ -116,8 +121,8 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-medium text-calm-800 mb-1">{profileName} · 焦虑自测</h3>
-              <p className="text-sm text-calm-500">了解自己的情绪状态，只需 3 分钟</p>
+              <h3 className="font-medium text-calm-800 mb-1">{t('home.anxietySelfTest').replace('{name}', profileName)}</h3>
+              <p className="text-sm text-calm-500">{t('home.understand')}</p>
             </div>
             <span className="text-2xl">📋</span>
           </div>
@@ -128,15 +133,15 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       {otherResult && (
         <div className="card bg-calm-50/60 border-calm-100 cursor-pointer" onClick={() => setProfile(otherProfile)}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-calm-500">{otherName}的视角</span>
-            <span className="text-[11px] text-warm-500">切换查看 →</span>
+            <span className="text-xs font-medium text-calm-500">{t('home.otherView').replace('{name}', otherName)}</span>
+            <span className="text-[11px] text-warm-500">{t('home.switchView')}</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-2xl">{moodEmoji(otherResult.level)}</span>
             <div>
-              <div className="text-sm font-medium text-calm-700">{otherResult.category}</div>
+              <div className="text-sm font-medium text-calm-700">{L(otherResult.category)}</div>
               <div className={`text-xs ${getLevelColor(otherResult.level)}`}>
-                {getLevelLabel(otherResult.level)}
+                {t(`scale.level.${otherResult.level}`)}
               </div>
             </div>
           </div>
@@ -152,8 +157,8 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         className="card w-full text-left hover:border-apple/40 transition-colors flex items-center justify-between"
       >
         <div>
-          <h3 className="font-medium text-calm-800 mb-1">生成分享卡片</h3>
-          <p className="text-sm text-calm-500">把今天的状态做成一张图，分享给在意的人</p>
+          <h3 className="font-medium text-calm-800 mb-1">{t('home.shareCard')}</h3>
+          <p className="text-sm text-calm-500">{t('home.shareCardDesc')}</p>
         </div>
         <span className="text-2xl">📤</span>
       </button>
@@ -164,23 +169,23 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       <div className="grid grid-cols-2 gap-3">
         <button onClick={() => onNavigate('scale')} className="card hover:border-warm-300 transition-colors py-4">
           <span className="text-2xl block mb-1">📋</span>
-          <span className="text-sm font-medium text-calm-700">焦虑自测</span>
-          <span className="text-xs text-calm-400">3 分钟了解自己</span>
+          <span className="text-sm font-medium text-calm-700">{t('home.qaScale')}</span>
+          <span className="text-xs text-calm-400">{t('home.qaScaleSub')}</span>
         </button>
         <button onClick={() => onNavigate('knowledge')} className="card hover:border-warm-300 transition-colors py-4">
           <span className="text-2xl block mb-1">📚</span>
-          <span className="text-sm font-medium text-calm-700">知识库</span>
-          <span className="text-xs text-calm-400">分月龄育儿指南</span>
+          <span className="text-sm font-medium text-calm-700">{t('home.qaKnowledge')}</span>
+          <span className="text-xs text-calm-400">{t('home.qaKnowledgeSub')}</span>
         </button>
         <button onClick={() => onNavigate('journal')} className="card hover:border-warm-300 transition-colors py-4">
           <span className="text-2xl block mb-1">✍️</span>
-          <span className="text-sm font-medium text-calm-700">每日记录</span>
-          <span className="text-xs text-calm-400">情绪 + 宝宝日记</span>
+          <span className="text-sm font-medium text-calm-700">{t('home.qaJournal')}</span>
+          <span className="text-xs text-calm-400">{t('home.qaJournalSub')}</span>
         </button>
         <button onClick={() => onNavigate('trends')} className="card hover:border-warm-300 transition-colors py-4">
           <span className="text-2xl block mb-1">📊</span>
-          <span className="text-sm font-medium text-calm-700">趋势追踪</span>
-          <span className="text-xs text-calm-400">看见自己的变化</span>
+          <span className="text-sm font-medium text-calm-700">{t('home.qaTrends')}</span>
+          <span className="text-xs text-calm-400">{t('home.qaTrendsSub')}</span>
         </button>
       </div>
 
@@ -195,15 +200,5 @@ function getLevelColor(level: string): string {
     case 'high': return 'text-orange-600'
     case 'severe': return 'text-red-600'
     default: return 'text-calm-500'
-  }
-}
-
-function getLevelLabel(level: string): string {
-  switch (level) {
-    case 'low': return '情绪状态良好'
-    case 'moderate': return '存在轻度焦虑'
-    case 'high': return '焦虑水平偏高'
-    case 'severe': return '建议寻求帮助'
-    default: return ''
   }
 }

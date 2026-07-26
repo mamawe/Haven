@@ -4,6 +4,7 @@ import {
   getReminderTime, isReminderEnabled, setReminder,
   notificationSupported, requestPermission,
 } from '../utils/reminder'
+import { useI18n } from '../i18n'
 
 export function DailyWhisper() {
   const [whisper] = useState(() => getWhisperForDate())
@@ -11,6 +12,7 @@ export function DailyWhisper() {
   const [time, setTime] = useState('21:00')
   const [perm, setPerm] = useState<NotificationPermission>('default')
   const [showTime, setShowTime] = useState(false)
+  const { t, L } = useI18n()
 
   useEffect(() => {
     setEnabled(isReminderEnabled())
@@ -54,19 +56,19 @@ export function DailyWhisper() {
     <div className="card bg-gradient-to-br from-warm-50 to-calm-50 border-warm-100">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-sm">🌿</span>
-        <span className="text-xs font-medium text-calm-500">今日一句</span>
+        <span className="text-xs font-medium text-calm-500">{t('whisper.label')}</span>
         <span className="text-xs text-calm-300">{new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}</span>
       </div>
-      <p className="text-sm text-calm-700 leading-relaxed font-serif">{whisper}</p>
+      <p className="text-sm text-calm-700 leading-relaxed font-serif">{L(whisper)}</p>
 
       {/* 通知开关 */}
       <div className="mt-3 pt-3 border-t border-calm-100 flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-medium text-calm-700">每日温和提醒</div>
+          <div className="text-xs font-medium text-calm-700">{t('whisper.reminderTitle')}</div>
           <div className="text-[11px] text-calm-400">
             {notificationSupported()
-              ? (enabled ? `每天 ${time} 一句暖心话` : '开启后每天推一句')
-              : '当前浏览器不支持通知'}
+              ? (enabled ? t('whisper.reminderOn').replace('{time}', time) : t('whisper.reminderOff'))
+              : t('whisper.notSupported')}
           </div>
         </div>
         {notificationSupported() && (
@@ -86,7 +88,7 @@ export function DailyWhisper() {
 
       {enabled && (
         <div className="mt-2 flex items-center gap-2">
-          <span className="text-xs text-calm-500">提醒时间</span>
+          <span className="text-xs text-calm-500">{t('whisper.timeLabel')}</span>
           <input
             type="time"
             value={time}
@@ -98,7 +100,7 @@ export function DailyWhisper() {
 
       {enabled && perm === 'denied' && (
         <p className="text-[11px] text-orange-600 mt-2">
-          通知被浏览器拒绝，请在站点设置里允许通知后重试。今日一句仍会显示。
+          {t('whisper.denied')}
         </p>
       )}
     </div>

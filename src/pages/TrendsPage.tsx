@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
 import { getScaleHistory, getDailyRecords } from '../utils/storage'
 import { useProfile } from '../context/ProfileContext'
+import { useI18n } from '../i18n'
 import { ShareCard } from '../components/ShareCard'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import type { ScaleResult, DailyRecord } from '../types'
 
+const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+
 export function TrendsPage() {
   const { profile, profileName } = useProfile()
+  const { t, L, lang } = useI18n()
   const [scaleHistory, setScaleHistory] = useState<ScaleResult[]>([])
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([])
   const [shareOpen, setShareOpen] = useState(false)
@@ -15,6 +19,8 @@ export function TrendsPage() {
     setScaleHistory(getScaleHistory())
     setDailyRecords(getDailyRecords())
   }, [profile])
+
+  const dateFmt = lang === 'zh' ? 'zh-CN' : 'en-US'
 
   // 最近 14 天的情绪数据
   const recentRecords = dailyRecords
@@ -70,29 +76,29 @@ export function TrendsPage() {
 
   return (
     <div className="px-4 py-6 space-y-5">
-      <h1 className="text-2xl font-serif text-calm-800 text-center">趋势追踪</h1>
-      <p className="text-center text-xs text-calm-400 -mt-3">{profileName} 的视角</p>
+      <h1 className="text-2xl font-serif text-calm-800 text-center">{t('trends.title')}</h1>
+      <p className="text-center text-xs text-calm-400 -mt-3">{t('trends.viewOf').replace('{name}', profileName)}</p>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-3">
         <div className="card text-center">
           <div className="text-2xl font-bold text-calm-800">{scaleCount}</div>
-          <div className="text-xs text-calm-500">次自测</div>
+          <div className="text-xs text-calm-500">{t('trends.scaleCount')}</div>
         </div>
         <div className="card text-center">
           <div className="text-2xl font-bold text-calm-800">{totalJournals}</div>
-          <div className="text-xs text-calm-500">天记录</div>
+          <div className="text-xs text-calm-500">{t('trends.journalCount')}</div>
         </div>
         {avgAnxiety && (
           <div className="card text-center">
             <div className={`text-2xl font-bold ${getAnxietyColor(parseFloat(avgAnxiety))}`}>{avgAnxiety}</div>
-            <div className="text-xs text-calm-500">平均焦虑 /10</div>
+            <div className="text-xs text-calm-500">{t('trends.avgAnxiety')}</div>
           </div>
         )}
         {avgMood && (
           <div className="card text-center">
             <div className="text-2xl font-bold text-calm-800">{avgMood}</div>
-            <div className="text-xs text-calm-500">平均心情 /5</div>
+            <div className="text-xs text-calm-500">{t('trends.avgMood')}</div>
           </div>
         )}
       </div>
@@ -103,8 +109,8 @@ export function TrendsPage() {
         className="card w-full text-left hover:border-apple/40 transition-colors flex items-center justify-between"
       >
         <div>
-          <h3 className="font-medium text-calm-800 mb-1">生成分享卡片</h3>
-          <p className="text-sm text-calm-500">把 {profileName} 的状态做成一张图，分享出去</p>
+          <h3 className="font-medium text-calm-800 mb-1">{t('trends.shareCard')}</h3>
+          <p className="text-sm text-calm-500">{t('trends.shareCardDesc').replace('{name}', profileName)}</p>
         </div>
         <span className="text-2xl">📤</span>
       </button>
@@ -114,7 +120,7 @@ export function TrendsPage() {
       {/* Anxiety Chart */}
       {recentRecords.length >= 2 ? (
         <div className="card">
-          <h3 className="text-sm font-medium text-calm-700 mb-4">近 14 天焦虑趋势</h3>
+          <h3 className="text-sm font-medium text-calm-700 mb-4">{t('trends.anxietyTrend')}</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={recentRecords}>
@@ -152,22 +158,22 @@ export function TrendsPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-xs text-calm-400 mt-3 text-center">坚持每天记录，就能看到自己的变化轨迹</p>
+          <p className="text-xs text-calm-400 mt-3 text-center">{t('trends.keepRecording')}</p>
         </div>
       ) : (
         <div className="card text-center py-8">
           <span className="text-3xl block mb-2">📊</span>
-          <p className="text-calm-500 text-sm">还没有足够的数据</p>
-          <p className="text-calm-400 text-xs mt-1">坚持记录几天就能看到趋势了</p>
+          <p className="text-calm-500 text-sm">{t('trends.noData')}</p>
+          <p className="text-calm-400 text-xs mt-1">{t('trends.noDataSub')}</p>
         </div>
       )}
 
       {/* Mood Calendar */}
       <div className="card">
-        <h3 className="text-sm font-medium text-calm-700 mb-4">近 30 天心情日历</h3>
+        <h3 className="text-sm font-medium text-calm-700 mb-4">{t('trends.moodCalendar')}</h3>
         <div className="grid grid-cols-7 gap-1">
-          {['一', '二', '三', '四', '五', '六', '日'].map(d => (
-            <div key={d} className="text-[10px] text-calm-400 text-center pb-1">{d}</div>
+          {WEEKDAYS.map(d => (
+            <div key={d} className="text-[10px] text-calm-400 text-center pb-1">{t(`trends.weekday.${d}`)}</div>
           ))}
           {/* Fill in empty cells for correct alignment */}
           {(() => {
@@ -192,19 +198,19 @@ export function TrendsPage() {
         <div className="flex items-center gap-3 justify-center mt-4">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-red-300" />
-            <span className="text-[10px] text-calm-500">差</span>
+            <span className="text-[10px] text-calm-500">{t('trends.legend.bad')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-yellow-300" />
-            <span className="text-[10px] text-calm-500">一般</span>
+            <span className="text-[10px] text-calm-500">{t('trends.legend.mid')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-soft-green-500" />
-            <span className="text-[10px] text-calm-500">好</span>
+            <span className="text-[10px] text-calm-500">{t('trends.legend.good')}</span>
           </div>
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-calm-100" />
-            <span className="text-[10px] text-calm-500">无记录</span>
+            <span className="text-[10px] text-calm-500">{t('trends.legend.none')}</span>
           </div>
         </div>
       </div>
@@ -212,18 +218,18 @@ export function TrendsPage() {
       {/* Scale History */}
       {scaleHistory.length > 0 && (
         <div className="card">
-          <h3 className="text-sm font-medium text-calm-700 mb-4">自测历史</h3>
+          <h3 className="text-sm font-medium text-calm-700 mb-4">{t('trends.history')}</h3>
           <div className="space-y-2">
             {scaleHistory.slice(-5).reverse().map((result, i) => (
               <div key={i} className="flex items-center justify-between py-2 border-b border-calm-50 last:border-0">
                 <div>
-                  <div className="text-sm text-calm-700">{result.category}</div>
+                  <div className="text-sm text-calm-700">{L(result.category)}</div>
                   <div className="text-xs text-calm-400">
-                    {new Date(result.timestamp).toLocaleDateString('zh-CN')}
+                    {new Date(result.timestamp).toLocaleDateString(dateFmt)}
                   </div>
                 </div>
                 <span className={`text-sm font-medium ${getLevelColor(result.level)}`}>
-                  {getLevelLabel(result.level)}
+                  {t(`trends.level.${result.level}`)}
                 </span>
               </div>
             ))}
@@ -243,15 +249,5 @@ function getLevelColor(level: string): string {
     case 'high': return 'text-orange-600'
     case 'severe': return 'text-red-600'
     default: return 'text-calm-500'
-  }
-}
-
-function getLevelLabel(level: string): string {
-  switch (level) {
-    case 'low': return '良好'
-    case 'moderate': return '轻度'
-    case 'high': return '偏高'
-    case 'severe': return '需关注'
-    default: return ''
   }
 }
