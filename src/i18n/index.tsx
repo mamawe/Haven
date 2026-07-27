@@ -241,6 +241,16 @@ export const UI: Record<string, Localized> = {
   'share.captionPlaceholder': { zh: '写点什么，或点下方按钮根据今日记录生成…', en: 'Write something, or tap below to generate from today…' },
   'share.generate': { zh: '根据今日记录生成', en: 'Generate from today' },
 
+  // 答案之书 / Book of Answers
+  'answerbook.title': { zh: '答案之书', en: 'Book of Answers' },
+  'answerbook.hint': { zh: '在心里默念一个问题，然后翻开书。', en: 'Hold a question in your heart, then open the book.' },
+  'answerbook.open': { zh: '翻开答案之书', en: 'Open the Book' },
+  'answerbook.flipping': { zh: '正在翻页…', en: 'Turning the pages…' },
+  'answerbook.again': { zh: '再翻一次', en: 'Flip again' },
+  'answerbook.close': { zh: '关闭', en: 'Close' },
+  'home.answerBook': { zh: '答案之书', en: 'Book of Answers' },
+  'home.answerBookDesc': { zh: '心里有疑问？让书替你翻一页。', en: 'A question on your mind? Let the book turn a page.' },
+
   // 主题 / Theme
   'theme.label': { zh: '切换主题', en: 'Theme' },
   'theme.choose': { zh: '选择主题风格', en: 'Choose a theme' },

@@ -9,6 +9,7 @@ import { LangSwitcher } from '../components/LangSwitcher'
 import { ProfileSwitcher } from '../components/ProfileSwitcher'
 import { DailyWhisper } from '../components/DailyWhisper'
 import { ShareCard } from '../components/ShareCard'
+import { AnswerBook } from '../components/AnswerBook'
 import { useI18n } from '../i18n'
 import type { ScaleResult, Tab } from '../types'
 
@@ -20,6 +21,7 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
   const [showBirthdayInput, setShowBirthdayInput] = useState(false)
   const [birthdayInput, setBirthdayInput] = useState('')
   const [shareOpen, setShareOpen] = useState(false)
+  const [answerOpen, setAnswerOpen] = useState(false)
 
   useEffect(() => {
     setLatestResult(getLatestScaleResult())
@@ -164,6 +166,20 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
       </button>
 
       <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} />
+
+      {/* 答案之书 */}
+      <button
+        onClick={() => setAnswerOpen(true)}
+        className="card w-full text-left hover:border-warm-300 transition-colors flex items-center justify-between"
+      >
+        <div>
+          <h3 className="font-medium text-calm-800 mb-1">{t('home.answerBook')}</h3>
+          <p className="text-sm text-calm-500">{t('home.answerBookDesc')}</p>
+        </div>
+        <span className="text-2xl">📖</span>
+      </button>
+
+      <AnswerBook open={answerOpen} onClose={() => setAnswerOpen(false)} />
 
       {/* Quick Actions Grid */}
       <div className="grid grid-cols-2 gap-3">
