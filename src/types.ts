@@ -3,6 +3,9 @@
 // 双语字符串：中文 + 英文
 export type Localized = { zh: string; en: string }
 
+// 地区（用于心理援助热线本地化）
+export type Region = 'CN' | 'HK' | 'TW' | 'US' | 'UK'
+
 // 底部导航标签页
 export type Tab = 'home' | 'scale' | 'knowledge' | 'journal' | 'trends' | 'firstaid'
 

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useProfile } from '../context/ProfileContext'
 import { getLatestScaleResult, getTodayRecord, getProfileName } from '../utils/storage'
 import { getWhisperForDate } from '../data/whispers'
 import { useI18n, pick } from '../i18n'
+import { Modal } from './Modal'
 import type { Lang } from '../i18n'
 import type { DailyRecord, ScaleResult, Localized } from '../types'
 
@@ -61,6 +62,7 @@ function buildAutoCaption(
 }
 
 const CARD_COUNT = 12
+const EXT = 'webp'
 
 export function ShareCard({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { profile } = useProfile()
@@ -73,10 +75,13 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   const today = getTodayRecord(profile)
   const whisper = getWhisperForDate()
 
-  // 分享文案：默认可编辑，初始值由今日记录自动生成
+  // 分享文案：默认可编辑，每次打开重新按今日记录生成
   const [caption, setCaption] = useState<string>(() => buildAutoCaption(lang, today, result, whisper))
 
-  if (!open) return null
+  useEffect(() => {
+    if (open) setCaption(buildAutoCaption(lang, today, result, whisper))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const dateLocale = lang === 'zh' ? 'zh-CN' : 'en-US'
   const dateStr = new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })
@@ -94,7 +99,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   const bgNo = bgIndex + 1
-  const bgPath = `/cards/${padNo(bgNo)}.jpg`
+  const bgPath = `/cards/${padNo(bgNo)}.${EXT}`
   const subHeader = t('share.todayStatus').replace('{name}', name)
 
   const regenerate = () => setCaption(buildAutoCaption(lang, today, result, whisper))
@@ -111,13 +116,11 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
 
     const img = new Image()
     img.onload = () => {
-      // 背景图：cover 铺满
       const s = Math.max(W / img.width, H / img.height)
       const dw = img.width * s
       const dh = img.height * s
       ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh)
 
-      // 暗色蒙版，保证白字可读
       const g = ctx.createLinearGradient(0, 0, 0, H)
       g.addColorStop(0, 'rgba(0,0,0,0.42)')
       g.addColorStop(0.5, 'rgba(0,0,0,0.28)')
@@ -127,7 +130,6 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
 
       ctx.textAlign = 'center'
 
-      // 顶部 wordmark
       ctx.fillStyle = WHITE
       ctx.font = '600 46px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
       ctx.fillText(appName, W / 2, 110)
@@ -135,21 +137,17 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
       ctx.font = '400 28px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
       ctx.fillText(subHeader, W / 2, 158)
 
-      // 中央 emoji
       ctx.font = '170px "Apple Color Emoji", "Segoe UI Emoji", system-ui, sans-serif'
       ctx.fillText(statusEmoji, W / 2, 500)
 
-      // 状态文案
       ctx.fillStyle = WHITE
       ctx.font = '600 50px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
       ctx.fillText(statusText, W / 2, 600)
 
-      // 可编辑分享文案（多行自动换行）
       ctx.fillStyle = WHITE_90
       ctx.font = '400 30px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
       wrapText(ctx, caption, W / 2, 720, W - 200, 44)
 
-      // 底部：日期 + 标语
       ctx.fillStyle = WHITE_60
       ctx.font = '400 26px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
       ctx.fillText(dateStr, W / 2, H - 120)
@@ -162,8 +160,7 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        const ext = lang === 'zh' ? name : name
-        a.download = `${appName}-${ext}-${new Date().toISOString().slice(0, 10)}.png`
+        a.download = `${appName}-${name}-${new Date().toISOString().slice(0, 10)}.png`
         a.click()
         URL.revokeObjectURL(url)
         setSaved(true)
@@ -174,79 +171,78 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="card-apple w-full max-w-sm max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <h3 className="text-lg font-semibold text-ink tracking-apple mb-3 text-center">{t('share.title')}</h3>
+    <Modal open={open} onClose={onClose} ariaLabel={t('share.title')}>
+      <h3 className="text-lg font-semibold text-ink tracking-apple mb-3 text-center">{t('share.title')}</h3>
 
-        {/* 预览：背景图 + 暗蒙版 + 白字，与导出一致 */}
-        <div className="relative rounded-[18px] overflow-hidden border border-hairline aspect-[4/5] bg-calm-100 select-none">
-          <img src={bgPath} alt="卡片背景" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/45" />
-          <div className="absolute inset-0 p-5 flex flex-col justify-between text-white">
-            <div className="flex items-center justify-between text-[11px]">
-              <span className="font-semibold tracking-apple">{appName}</span>
-              <span className="opacity-90">{subHeader}</span>
-            </div>
-            <div className="text-center">
-              <div className="text-6xl">{statusEmoji}</div>
-              <div className="text-lg font-semibold tracking-apple mt-1">{statusText}</div>
-            </div>
-            <div className="text-center space-y-1">
-              <p className="text-sm leading-relaxed px-1 whitespace-pre-line">{caption}</p>
-              <div className="text-[11px] opacity-80">{dateStr}</div>
-              <div className="text-[11px] font-medium">{t('share.tagline')}</div>
-            </div>
+      {/* 预览：背景图 + 暗蒙版 + 白字，与导出一致 */}
+      <div className="relative rounded-[18px] overflow-hidden border border-hairline aspect-[4/5] bg-calm-100 select-none">
+        <img src={bgPath} alt="卡片背景" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-black/45" />
+        <div className="absolute inset-0 p-5 flex flex-col justify-between text-white">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-semibold tracking-apple">{appName}</span>
+            <span className="opacity-90">{subHeader}</span>
           </div>
-        </div>
-
-        {/* 可编辑分享文案 */}
-        <div className="mt-3">
-          <div className="flex items-center justify-between mb-1">
-            <label className="text-xs text-calm-500">{t('share.captionLabel')}</label>
-            <button
-              onClick={regenerate}
-              className="text-xs text-apple font-medium px-2 py-1 rounded-full bg-apple/10 active:scale-95 transition"
-            >
-              ✨ {t('share.generate')}
-            </button>
+          <div className="text-center">
+            <div className="text-6xl">{statusEmoji}</div>
+            <div className="text-lg font-semibold tracking-apple mt-1">{statusText}</div>
           </div>
-          <textarea
-            value={caption}
-            onChange={e => setCaption(e.target.value)}
-            rows={4}
-            placeholder={t('share.captionPlaceholder')}
-            className="w-full rounded-[12px] border border-hairline bg-calm-50 p-3 text-sm text-ink resize-none leading-relaxed focus:outline-none focus:ring-2 focus:ring-apple/30"
-          />
-        </div>
-
-        {/* 背景选择 */}
-        <div className="mt-3">
-          <p className="text-xs text-calm-500 mb-2">{t('share.chooseBg')}</p>
-          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
-            {Array.from({ length: CARD_COUNT }, (_, i) => i + 1).map(n => (
-              <button
-                key={n}
-                onClick={() => setBgIndex(n - 1)}
-                className={`relative shrink-0 w-12 h-16 rounded-[10px] overflow-hidden border transition-all ${
-                  bgIndex === n - 1 ? 'border-apple ring-2 ring-apple/30' : 'border-hairline'
-                }`}
-              >
-                <img src={`/cards/${padNo(n)}.jpg`} alt={`背景${n}`} className="w-full h-full object-cover" draggable={false} />
-              </button>
-            ))}
+          <div className="text-center space-y-1">
+            <p className="text-sm leading-relaxed px-1 whitespace-pre-line">{caption}</p>
+            <div className="text-[11px] opacity-80">{dateStr}</div>
+            <div className="text-[11px] font-medium">{t('share.tagline')}</div>
           </div>
-        </div>
-
-        <div className="flex gap-3 mt-4">
-          <button onClick={onClose} className="btn-ghost flex-1 border border-hairline">
-            {t('share.close')}
-          </button>
-          <button onClick={drawCard} className="btn-apple flex-1">
-            {saved ? t('share.saved') : t('share.saveImg')}
-          </button>
         </div>
       </div>
-    </div>
+
+      {/* 可编辑分享文案 */}
+      <div className="mt-3">
+        <div className="flex items-center justify-between mb-1">
+          <label className="text-xs text-calm-500">{t('share.captionLabel')}</label>
+          <button
+            onClick={regenerate}
+            className="text-xs text-apple font-medium px-2 py-1 rounded-full bg-apple/10 active:scale-95 transition"
+          >
+            ✨ {t('share.generate')}
+          </button>
+        </div>
+        <textarea
+          value={caption}
+          onChange={e => setCaption(e.target.value)}
+          rows={4}
+          placeholder={t('share.captionPlaceholder')}
+          className="w-full rounded-[12px] border border-hairline bg-calm-50 p-3 text-sm text-ink resize-none leading-relaxed focus:outline-none focus:ring-2 focus:ring-apple/30"
+        />
+      </div>
+
+      {/* 背景选择 */}
+      <div className="mt-3">
+        <p className="text-xs text-calm-500 mb-2">{t('share.chooseBg')}</p>
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          {Array.from({ length: CARD_COUNT }, (_, i) => i + 1).map(n => (
+            <button
+              key={n}
+              onClick={() => setBgIndex(n - 1)}
+              aria-label={`${t('share.chooseBg')} ${n}`}
+              className={`relative shrink-0 w-12 h-16 rounded-[10px] overflow-hidden border transition-all ${
+                bgIndex === n - 1 ? 'border-apple ring-2 ring-apple/30' : 'border-hairline'
+              }`}
+            >
+              <img src={`/cards/${padNo(n)}.${EXT}`} alt={`背景${n}`} className="w-full h-full object-cover" draggable={false} />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex gap-3 mt-4">
+        <button onClick={onClose} className="btn-ghost flex-1 border border-hairline">
+          {t('share.close')}
+        </button>
+        <button onClick={drawCard} className="btn-apple flex-1">
+          {saved ? t('share.saved') : t('share.saveImg')}
+        </button>
+      </div>
+    </Modal>
   )
 }
 

@@ -3,9 +3,10 @@ import {
   epdsQuestions, parentingAnxietyQuestions, evaluateScore, getSuggestions,
   getQuickQuestions, normalizeQuickScore
 } from '../data/scale'
-import { addScaleResult } from '../utils/storage'
+import { addScaleResult, getHotlineRegion } from '../utils/storage'
 import { useProfile } from '../context/ProfileContext'
 import { useI18n } from '../i18n'
+import { HOTLINES } from '../data/hotlines'
 import type { ScaleQuestion, Localized } from '../types'
 
 type Phase = 'intro' | 'epds' | 'transition' | 'parenting' | 'result'
@@ -19,6 +20,7 @@ export function ScalePage() {
   const [parentingAnswers, setParentingAnswers] = useState<number[]>([])
   const { profileName } = useProfile()
   const { t, L, lang } = useI18n()
+  const region = getHotlineRegion()
 
   // 根据模式选择题目集
   const epdsSet = mode === 'full' ? epdsQuestions : getQuickQuestions(epdsQuestions)
@@ -258,9 +260,15 @@ export function ScalePage() {
             <p className="text-sm text-red-700 font-medium mb-2">
               {t('scale.highAlert')}
             </p>
-            <p className="text-xs text-red-600 mb-3">
-              {t('scale.hotline')}<strong>400-161-9995</strong>
-            </p>
+            <div className="space-y-1 mb-3">
+              {HOTLINES[region].map(h => (
+                <p key={h.number} className="text-xs text-red-600">
+                  {t('scale.hotline')}
+                  <a href={`tel:${h.number}`} className="font-bold underline ml-1">{h.number}</a>
+                  <span className="opacity-80 ml-1">· {L(h.label)}</span>
+                </p>
+              ))}
+            </div>
             <p className="text-xs text-red-500">
               {t('scale.seekHelp')}
             </p>

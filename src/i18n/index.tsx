@@ -265,6 +265,63 @@ export const UI: Record<string, Localized> = {
   'lang.label': { zh: '语言', en: 'Language' },
   'lang.zh': { zh: '中文', en: '中文' },
   'lang.en': { zh: 'EN', en: 'EN' },
+
+  // 错误边界 / Error Boundary
+  'error.title': { zh: '出了点小问题', en: 'Something went wrong' },
+  'error.sub': { zh: '别担心，你的数据都还在。刷新一下试试。', en: 'Don’t worry — your data is safe. Try refreshing.' },
+  'error.reload': { zh: '刷新', en: 'Reload' },
+
+  // SW 更新提示 / Update banner
+  'update.title': { zh: '发现新版本', en: 'A new version is available' },
+  'update.reload': { zh: '立即更新', en: 'Update now' },
+
+  // 新手引导 / Onboarding
+  'onboard.title': { zh: '欢迎来到 锚点', en: 'Welcome to Haven' },
+  'onboard.sub': { zh: '先花 20 秒，让我们更懂你', en: '20 seconds to personalize your experience' },
+  'onboard.role': { zh: '你的角色是？', en: 'Your role?' },
+  'onboard.roleMom': { zh: '妈妈', en: 'Mom' },
+  'onboard.roleDad': { zh: '爸爸', en: 'Dad' },
+  'onboard.roleOther': { zh: '其他照护者', en: 'Other caregiver' },
+  'onboard.babyStage': { zh: '宝宝现在处于？', en: 'Where is your baby now?' },
+  'onboard.stagePre': { zh: '备孕中', en: 'Trying to conceive' },
+  'onboard.stagePreg': { zh: '孕期', en: 'Pregnancy' },
+  'onboard.stageBorn': { zh: '已出生', en: 'Already born' },
+  'onboard.stageUnsure': { zh: '还不确定', en: 'Not sure yet' },
+  'onboard.birthday': { zh: '宝宝生日', en: 'Baby’s birthday' },
+  'onboard.next': { zh: '下一步', en: 'Next' },
+  'onboard.start': { zh: '开始使用', en: 'Get started' },
+  'onboard.skip': { zh: '跳过', en: 'Skip' },
+
+  // 知识库收藏 / Knowledge favorites & weekly rec
+  'knowledge.weekRec': { zh: '本周推荐', en: 'Recommended this week' },
+  'knowledge.favorites': { zh: '我的收藏', en: 'My favorites' },
+  'knowledge.favEmpty': { zh: '还没有收藏，点文章右上角 ★ 收藏', en: 'No favorites yet — tap ★ on an article' },
+  'knowledge.favTab': { zh: '收藏', en: 'Favorites' },
+  'knowledge.favAria': { zh: '收藏', en: 'Favorite' },
+  'knowledge.unfavAria': { zh: '取消收藏', en: 'Unfavorite' },
+
+  // 趋势多指标 / Trends multi-metric
+  'trends.moodTrend': { zh: '心情趋势', en: 'Mood trend' },
+  'trends.sleepTrend': { zh: '睡眠趋势', en: 'Sleep trend' },
+  'trends.insight': { zh: '关联洞察', en: 'Insight' },
+  'trends.insightSleep': { zh: '睡眠更充足的日子，焦虑平均低 {d} 分', en: 'On better-slept days, anxiety averages {d} points lower' },
+  'trends.insightMood': { zh: '心情更好的日子，焦虑平均低 {d} 分', en: 'On better-mood days, anxiety averages {d} points lower' },
+  'trends.insightNone': { zh: '继续记录，洞察会越来越多', en: 'Keep logging — insights grow over time' },
+  'trends.showAnxiety': { zh: '焦虑', en: 'Anxiety' },
+  'trends.showMood': { zh: '心情', en: 'Mood' },
+  'trends.showSleep': { zh: '睡眠', en: 'Sleep' },
+
+  // 焦虑急救 · 紧急求助 / First Aid emergency
+  'firstaid.emergency': { zh: '需要紧急帮助？', en: 'Need urgent help?' },
+  'firstaid.emergencyDesc': { zh: '如果你或宝宝处于危险中，请立即寻求紧急帮助', en: 'If you or your baby are in danger, get emergency help now' },
+  'firstaid.callHotline': { zh: '拨打心理援助热线', en: 'Call mental-health hotline' },
+  'firstaid.hotlineNote': { zh: '专业咨询师接听，免费、保密', en: 'Staffed by professional counselors — free & confidential' },
+  'firstaid.region': { zh: '所在地区', en: 'Your region' },
+  'firstaid.regionCN': { zh: '中国大陆', en: 'Mainland China' },
+  'firstaid.regionHK': { zh: '中国香港', en: 'Hong Kong, China' },
+  'firstaid.regionTW': { zh: '中国台湾', en: 'Taiwan, China' },
+  'firstaid.regionUS': { zh: '美国', en: 'United States' },
+  'firstaid.regionUK': { zh: '英国', en: 'United Kingdom' },
 }
 
 interface I18nValue {

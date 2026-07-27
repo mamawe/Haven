@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { reassuranceCards } from '../data/whispers'
+import { HOTLINES } from '../data/hotlines'
+import { getHotlineRegion, setHotlineRegion } from '../utils/storage'
 import { useI18n } from '../i18n'
+import type { Region } from '../types'
 
 // ============ 箱式呼吸 (4-4-4-4) ============
 const PHASES = [
@@ -168,13 +171,60 @@ function ReassuranceCards() {
 }
 
 export function FirstAidPage({ onNavigate }: { onNavigate: (tab: 'journal') => void }) {
-  const { t } = useI18n()
+  const { t, L } = useI18n()
+  const [region, setRegion] = useState<Region>(() => getHotlineRegion())
+  const hotlines = HOTLINES[region]
+
+  const onRegion = (r: Region) => {
+    setRegion(r)
+    setHotlineRegion(r)
+  }
+
   return (
     <div className="px-4 py-6 space-y-5">
       <div className="text-center">
         <span className="text-3xl">🆘</span>
         <h1 className="text-2xl font-serif text-calm-800 mt-1">{t('firstaid.title')}</h1>
         <p className="text-sm text-calm-500 mt-1">{t('firstaid.sub')}</p>
+      </div>
+
+      {/* 紧急求助（常驻） */}
+      <div className="card bg-red-50 border-red-200">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-xl">🚨</span>
+          <div>
+            <h3 className="text-sm font-semibold text-red-700">{t('firstaid.emergency')}</h3>
+            <p className="text-xs text-red-500 leading-snug">{t('firstaid.emergencyDesc')}</p>
+          </div>
+        </div>
+        <label className="text-xs text-red-600 font-medium block mb-1">{t('firstaid.region')}</label>
+        <select
+          value={region}
+          onChange={e => onRegion(e.target.value as Region)}
+          className="w-full rounded-xl border border-red-200 bg-white px-3 py-2 text-sm text-red-700 mb-3 focus:outline-none focus:ring-2 focus:ring-red-300"
+        >
+          <option value="CN">{t('firstaid.regionCN')}</option>
+          <option value="HK">{t('firstaid.regionHK')}</option>
+          <option value="TW">{t('firstaid.regionTW')}</option>
+          <option value="US">{t('firstaid.regionUS')}</option>
+          <option value="UK">{t('firstaid.regionUK')}</option>
+        </select>
+        <div className="space-y-2">
+          {hotlines.map(h => (
+            <a
+              key={h.number}
+              href={`tel:${h.number}`}
+              className="flex items-center justify-between rounded-xl bg-white border border-red-200 px-3 py-2 active:scale-[0.98] transition"
+            >
+              <span className="text-sm text-red-700">
+                <span className="font-bold">{h.number}</span>
+                <span className="text-red-500 text-xs ml-2">{L(h.label)}</span>
+              </span>
+              <span className="text-xs text-red-600 font-medium">{t('firstaid.callHotline')} →</span>
+            </a>
+          ))}
+        </div>
+        <p className="text-[11px] text-red-400 mt-2">{t('firstaid.hotlineNote')}</p>
       </div>
 
       <BreathingExercise />

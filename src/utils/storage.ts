@@ -1,4 +1,4 @@
-import type { ScaleResult, DailyRecord } from '../types'
+import type { ScaleResult, DailyRecord, Region } from '../types'
 
 export type Profile = 'me' | 'partner'
 
@@ -133,4 +133,65 @@ export function setTheme(theme: ThemeKey): void {
 export function applyStoredTheme(): void {
   const theme = getTheme()
   document.documentElement.setAttribute('data-theme', theme)
+}
+
+// 安全的写入封装：Safari 隐私模式 / 配额满时会抛异常，避免整页白屏
+function safeSet(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    /* 忽略写入失败，保证 UI 不崩 */
+  }
+}
+
+// ===== 知识库收藏（共享，不按档案区分）=====
+const KEYS_FAV = {
+  FAVORITES: 'parent-calm-favorites',
+  ONBOARDED: 'parent-calm-onboarded',
+  BABY_STAGE: 'parent-calm-baby-stage',
+}
+export function getFavorites(): string[] {
+  try {
+    const raw = localStorage.getItem(KEYS_FAV.FAVORITES)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+export function isFavorite(id: string): boolean {
+  return getFavorites().includes(id)
+}
+export function toggleFavorite(id: string): boolean {
+  const favs = getFavorites()
+  const next = favs.includes(id) ? favs.filter(x => x !== id) : [...favs, id]
+  safeSet(KEYS_FAV.FAVORITES, JSON.stringify(next))
+  return next.includes(id)
+}
+
+// ===== 新手引导状态 =====
+export function getOnboarded(): boolean {
+  return localStorage.getItem(KEYS_FAV.ONBOARDED) === '1'
+}
+export function setOnboarded(): void {
+  safeSet(KEYS_FAV.ONBOARDED, '1')
+}
+
+// 宝宝阶段偏好（用于默认知识库阶段）：prepregnancy / pregnancy / infant / toddler / null
+export type BabyStagePref = 'prepregnancy' | 'pregnancy' | 'infant' | 'toddler' | null
+export function getBabyStagePref(): BabyStagePref {
+  const v = localStorage.getItem(KEYS_FAV.BABY_STAGE) as BabyStagePref
+  return v ?? null
+}
+export function setBabyStagePref(stage: Exclude<BabyStagePref, null>): void {
+  safeSet(KEYS_FAV.BABY_STAGE, stage)
+}
+
+// ===== 危机热线地区（持久化，供自测结果与急救页共用）=====
+const KEYS_REGION = 'parent-calm-region'
+export function getHotlineRegion(): Region {
+  const v = localStorage.getItem(KEYS_REGION)
+  return v === 'CN' || v === 'HK' || v === 'TW' || v === 'US' || v === 'UK' ? v : 'CN'
+}
+export function setHotlineRegion(r: Region): void {
+  safeSet(KEYS_REGION, r)
 }

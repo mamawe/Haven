@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import type { ScaleResult, DailyRecord } from '../types'
 
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+type Metric = 'anxiety' | 'mood' | 'sleep'
 
 export function TrendsPage() {
   const { profile, profileName } = useProfile()
@@ -14,6 +15,7 @@ export function TrendsPage() {
   const [scaleHistory, setScaleHistory] = useState<ScaleResult[]>([])
   const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([])
   const [shareOpen, setShareOpen] = useState(false)
+  const [metric, setMetric] = useState<Metric>('anxiety')
 
   useEffect(() => {
     setScaleHistory(getScaleHistory())
@@ -22,13 +24,14 @@ export function TrendsPage() {
 
   const dateFmt = lang === 'zh' ? 'zh-CN' : 'en-US'
 
-  // 最近 14 天的情绪数据
+  // 最近 14 天
   const recentRecords = dailyRecords
     .slice(-14)
     .map(r => ({
       date: r.date.slice(5), // MM-DD
       mood: r.mood,
       anxiety: r.anxiety,
+      sleep: r.sleep,
     }))
 
   // 情绪日历数据：最近 30 天
@@ -39,11 +42,7 @@ export function TrendsPage() {
     d.setDate(d.getDate() - i)
     const dateStr = d.toISOString().split('T')[0]
     const record = dailyRecords.find(r => r.date === dateStr)
-    calendarDays.push({
-      date: dateStr,
-      day: d.getDate(),
-      mood: record ? record.mood : null,
-    })
+    calendarDays.push({ date: dateStr, day: d.getDate(), mood: record ? record.mood : null })
   }
 
   const getMoodColor = (mood: number | null): string => {
@@ -61,18 +60,59 @@ export function TrendsPage() {
     if (val <= 8) return 'text-orange-600'
     return 'text-red-600'
   }
+  const getLevelColor = (level: string): string => {
+    switch (level) {
+      case 'low': return 'text-soft-green-600'
+      case 'moderate': return 'text-warm-500'
+      case 'high': return 'text-orange-600'
+      case 'severe': return 'text-red-600'
+      default: return 'text-calm-500'
+    }
+  }
 
   // Stats
-  const avgAnxiety = recentRecords.length > 0
-    ? (recentRecords.reduce((s, r) => s + r.anxiety, 0) / recentRecords.length).toFixed(1)
-    : null
-
-  const avgMood = recentRecords.length > 0
-    ? (recentRecords.reduce((s, r) => s + r.mood, 0) / recentRecords.length).toFixed(1)
-    : null
-
+  const avg = (key: 'anxiety' | 'mood') => {
+    const arr = recentRecords.map(r => r[key])
+    return arr.length ? (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1) : null
+  }
+  const avgAnxiety = avg('anxiety')
+  const avgMood = avg('mood')
   const totalJournals = dailyRecords.length
   const scaleCount = scaleHistory.length
+
+  // 关联洞察：睡眠 / 心情 与焦虑的关系
+  const insight = (() => {
+    if (recentRecords.length < 4) return null
+    const splitBySleep = (hi: boolean) => {
+      const subset = recentRecords.filter(r => (hi ? r.sleep >= 7 : r.sleep < 7))
+      if (subset.length < 2) return null
+      return subset.reduce((s, r) => s + r.anxiety, 0) / subset.length
+    }
+    const hiSleep = splitBySleep(true)
+    const loSleep = splitBySleep(false)
+    if (hiSleep !== null && loSleep !== null) {
+      const diff = loSleep - hiSleep
+      if (diff >= 0.5) {
+        return t('trends.insightSleep').replace('{d}', diff.toFixed(1))
+      }
+    }
+    const hiMood = recentRecords.filter(r => r.mood >= 4)
+    const loMood = recentRecords.filter(r => r.mood <= 2)
+    if (hiMood.length >= 2 && loMood.length >= 2) {
+      const avgA = (sub: typeof recentRecords) => sub.reduce((s, r) => s + r.anxiety, 0) / sub.length
+      const diff = avgA(loMood) - avgA(hiMood)
+      if (diff >= 0.5) {
+        return t('trends.insightMood').replace('{d}', diff.toFixed(1))
+      }
+    }
+    return null
+  })()
+
+  const metricConfig: Record<Metric, { label: string; color: string; domain: [number, number]; ticks?: number[] }> = {
+    anxiety: { label: t('trends.showAnxiety'), color: '#0066cc', domain: [0, 10], ticks: [0, 2, 4, 6, 8, 10] },
+    mood: { label: t('trends.showMood'), color: '#439547', domain: [1, 5], ticks: [1, 2, 3, 4, 5] },
+    sleep: { label: t('trends.showSleep'), color: '#d83b78', domain: [0, 12], ticks: [0, 3, 6, 9, 12] },
+  }
 
   return (
     <div className="px-4 py-6 space-y-5">
@@ -117,10 +157,39 @@ export function TrendsPage() {
 
       <ShareCard open={shareOpen} onClose={() => setShareOpen(false)} />
 
-      {/* Anxiety Chart */}
+      {/* 关联洞察 */}
+      {insight && (
+        <div className="card bg-warm-50 border-warm-200">
+          <div className="flex items-start gap-2">
+            <span className="text-warm-500 text-sm mt-0.5">💡</span>
+            <div>
+              <div className="text-xs font-medium text-warm-700 mb-0.5">{t('trends.insight')}</div>
+              <p className="text-sm text-calm-700 leading-relaxed">{insight}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 多指标趋势图 */}
       {recentRecords.length >= 2 ? (
         <div className="card">
-          <h3 className="text-sm font-medium text-calm-700 mb-4">{t('trends.anxietyTrend')}</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-calm-700">{t('trends.anxietyTrend')}</h3>
+            <div className="flex gap-1">
+              {(['anxiety', 'mood', 'sleep'] as Metric[]).map(m => (
+                <button
+                  key={m}
+                  onClick={() => setMetric(m)}
+                  className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                    metric === m ? 'text-white' : 'text-calm-500 bg-calm-100'
+                  }`}
+                  style={metric === m ? { backgroundColor: metricConfig[m].color } : undefined}
+                >
+                  {metricConfig[m].label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={recentRecords}>
@@ -132,8 +201,8 @@ export function TrendsPage() {
                   tickLine={false}
                 />
                 <YAxis
-                  domain={[0, 10]}
-                  ticks={[0, 2, 4, 6, 8, 10]}
+                  domain={metricConfig[metric].domain}
+                  ticks={metricConfig[metric].ticks}
                   tick={{ fontSize: 10, fill: '#86868b' }}
                   axisLine={{ stroke: '#e0e0e0' }}
                   tickLine={false}
@@ -149,10 +218,10 @@ export function TrendsPage() {
                 />
                 <Line
                   type="monotone"
-                  dataKey="anxiety"
-                  stroke="#0066cc"
+                  dataKey={metric}
+                  stroke={metricConfig[metric].color}
                   strokeWidth={2.5}
-                  dot={{ fill: '#0066cc', r: 4 }}
+                  dot={{ fill: metricConfig[metric].color, r: 4 }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>
@@ -175,7 +244,6 @@ export function TrendsPage() {
           {WEEKDAYS.map(d => (
             <div key={d} className="text-[10px] text-calm-400 text-center pb-1">{t(`trends.weekday.${d}`)}</div>
           ))}
-          {/* Fill in empty cells for correct alignment */}
           {(() => {
             const firstDay = new Date(calendarDays[0].date).getDay() || 7 // Monday=1
             const emptyCells = []
@@ -195,7 +263,7 @@ export function TrendsPage() {
             </div>
           ))}
         </div>
-        <div className="flex items-center gap-3 justify-center mt-4">
+        <div className="flex items-center gap-3 justify-center mt-4 flex-wrap">
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded-sm bg-red-300" />
             <span className="text-[10px] text-calm-500">{t('trends.legend.bad')}</span>
@@ -240,14 +308,4 @@ export function TrendsPage() {
       <div className="h-8" />
     </div>
   )
-}
-
-function getLevelColor(level: string): string {
-  switch (level) {
-    case 'low': return 'text-soft-green-600'
-    case 'moderate': return 'text-warm-500'
-    case 'high': return 'text-orange-600'
-    case 'severe': return 'text-red-600'
-    default: return 'text-calm-500'
-  }
 }
