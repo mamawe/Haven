@@ -162,3 +162,27 @@
 .animate-book-pulse {
   animation: bookPulse 1.1s ease-in-out infinite;
 }
+
+/* ============ 动效降级：尊重 prefers-reduced-motion ============ */
+@media (prefers-reduced-motion: reduce) {
+  /* 关闭关键帧动画 */
+  .animate-answer-in,
+  .animate-book-pulse {
+    animation: none !important;
+  }
+  /* 关闭全局过渡与缩放反馈，避免前庭敏感用户不适 */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* 仍保留按压缩放反馈的可访问性（仅去除过渡感） */
+  .btn-primary:active,
+  .btn-ghost:active,
+  .btn-apple:active {
+    transform: none !important;
+  }
+}

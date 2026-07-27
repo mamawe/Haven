@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   getLatestScaleResult, getBabyAgeInMonths, getBabyBirthday, setBabyBirthday,
-  getProfileName, type Profile,
+  getProfileName, getProfileStats, type Profile,
 } from '../utils/storage'
 import { useProfile } from '../context/ProfileContext'
 import { ThemeSwitcher } from '../components/ThemeSwitcher'
@@ -30,10 +30,11 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
     if (!bday) setShowBirthdayInput(true)
   }, [profile])
 
-  // 伴侣视角：查看另一位档案的最近自测
+  // 伴侣双视角对比
   const otherProfile: Profile = profile === 'me' ? 'partner' : 'me'
-  const otherResult = getLatestScaleResult(otherProfile)
   const otherName = getProfileName(otherProfile)
+  const myStats = getProfileStats('me')
+  const otherStats = getProfileStats(otherProfile)
 
   const handleSaveBirthday = () => {
     if (birthdayInput) {
@@ -55,6 +56,17 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
 
   const fmtDate = (ts: number) =>
     new Date(ts).toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US')
+
+  const fmtStat = (v: number | null) => (v == null ? '—' : v.toFixed(1))
+  const pickCompareInsight = () => {
+    if (myStats.count === 0 || otherStats.count === 0) {
+      return t('home.compareInsight.oneMissing').replace('{name}', otherName)
+    }
+    const d = (myStats.avgAnxiety ?? 0) - (otherStats.avgAnxiety ?? 0)
+    if (Math.abs(d) < 0.5) return t('home.compareInsight.similar').replace('{name}', otherName)
+    if (d > 0) return t('home.compareInsight.youHigher').replace('{name}', otherName)
+    return t('home.compareInsight.partnerHigher').replace('{name}', otherName)
+  }
 
   return (
     <div className="px-4 py-6 space-y-5">
@@ -131,22 +143,48 @@ export function HomePage({ onNavigate }: { onNavigate: (tab: Tab) => void }) {
         </button>
       )}
 
-      {/* Partner View Peek */}
-      {otherResult && (
+      {/* 伴侣双视角对比洞察 */}
+      {(myStats.count > 0 || otherStats.count > 0) && (
         <div className="card bg-calm-50/60 border-calm-100 cursor-pointer" onClick={() => setProfile(otherProfile)}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-calm-500">{t('home.otherView').replace('{name}', otherName)}</span>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-calm-600">{t('home.compareTitle')}</span>
             <span className="text-[11px] text-warm-500">{t('home.switchView')}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">{moodEmoji(otherResult.level)}</span>
-            <div>
-              <div className="text-sm font-medium text-calm-700">{L(otherResult.category)}</div>
-              <div className={`text-xs ${getLevelColor(otherResult.level)}`}>
-                {t(`scale.level.${otherResult.level}`)}
-              </div>
+
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-calm-500 w-20 shrink-0">{t('home.compareAvgAnxiety')}</span>
+              <span className="flex-1 flex justify-between px-2">
+                <span className="font-medium text-calm-800 tabular-nums">{fmtStat(myStats.avgAnxiety)}</span>
+                <span className="font-medium text-calm-800 tabular-nums">{fmtStat(otherStats.avgAnxiety)}</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-calm-500 w-20 shrink-0">{t('home.compareAvgMood')}</span>
+              <span className="flex-1 flex justify-between px-2">
+                <span className="font-medium text-calm-800 tabular-nums">{fmtStat(myStats.avgMood)}</span>
+                <span className="font-medium text-calm-800 tabular-nums">{fmtStat(otherStats.avgMood)}</span>
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-calm-500 w-20 shrink-0">{t('home.compareAvgSleep')}</span>
+              <span className="flex-1 flex justify-between px-2">
+                <span className="font-medium text-calm-800 tabular-nums">{fmtStat(myStats.avgSleep)}</span>
+                <span className="font-medium text-calm-800 tabular-nums">{fmtStat(otherStats.avgSleep)}</span>
+              </span>
+            </div>
+            <div className="flex items-center text-[11px] text-calm-400 px-2 pt-0.5">
+              <span className="w-20 shrink-0"></span>
+              <span className="flex-1 flex justify-between">
+                <span className="truncate max-w-[45%]">{profileName}</span>
+                <span className="truncate max-w-[45%] text-right">{otherName}</span>
+              </span>
             </div>
           </div>
+
+          <p className="mt-3 text-xs text-warm-700 bg-warm-50 rounded-xl px-3 py-2 leading-relaxed">
+            {pickCompareInsight()}
+          </p>
         </div>
       )}
 

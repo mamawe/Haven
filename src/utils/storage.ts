@@ -103,6 +103,33 @@ export function getRecordsByDateRange(start: string, end: string, profile: Profi
   return getDailyRecords(profile).filter(r => r.date >= start && r.date <= end)
 }
 
+// 某档案的每日记录统计（用于伴侣双视角对比）
+export interface ProfileStats {
+  avgAnxiety: number | null  // 1-10
+  avgMood: number | null     // 1-5
+  avgSleep: number | null    // hours
+  count: number
+}
+export function getProfileStats(profile: Profile = getCurrentProfile()): ProfileStats {
+  const recs = getDailyRecords(profile)
+  if (recs.length === 0) return { avgAnxiety: null, avgMood: null, avgSleep: null, count: 0 }
+  const sum = recs.reduce(
+    (acc, r) => {
+      acc.anxiety += r.anxiety ?? 0
+      acc.mood += r.mood ?? 0
+      acc.sleep += r.sleep ?? 0
+      return acc
+    },
+    { anxiety: 0, mood: 0, sleep: 0 }
+  )
+  return {
+    avgAnxiety: sum.anxiety / recs.length,
+    avgMood: sum.mood / recs.length,
+    avgSleep: sum.sleep / recs.length,
+    count: recs.length,
+  }
+}
+
 // ===== 宝宝生日（共享，不按档案区分）=====
 export function getBabyBirthday(): string | null {
   return localStorage.getItem(KEYS.BABY_BIRTHDAY)
@@ -194,4 +221,46 @@ export function getHotlineRegion(): Region {
 }
 export function setHotlineRegion(r: Region): void {
   safeSet(KEYS_REGION, r)
+}
+
+// ===== 数据备份：导出 / 导入 / 清空（仅 parent-calm-* 命名空间）=====
+const KEY_PREFIX = 'parent-calm-'
+export interface BackupData {
+  app: 'haven'
+  version: number
+  exportedAt: string
+  data: Record<string, string>
+}
+export function exportAll(): string {
+  const data: Record<string, string> = {}
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k && k.startsWith(KEY_PREFIX)) {
+      const v = localStorage.getItem(k)
+      if (v != null) data[k] = v
+    }
+  }
+  const payload: BackupData = { app: 'haven', version: 1, exportedAt: new Date().toISOString(), data }
+  return JSON.stringify(payload, null, 2)
+}
+export function importAll(json: string): boolean {
+  try {
+    const parsed = JSON.parse(json) as BackupData
+    if (!parsed || parsed.app !== 'haven' || typeof parsed.data !== 'object') return false
+    clearAllData()
+    for (const [k, v] of Object.entries(parsed.data)) {
+      if (k.startsWith(KEY_PREFIX)) safeSet(k, v)
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+export function clearAllData(): void {
+  const toRemove: string[] = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k && k.startsWith(KEY_PREFIX)) toRemove.push(k)
+  }
+  toRemove.forEach(k => localStorage.removeItem(k))
 }

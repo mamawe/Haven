@@ -52,6 +52,18 @@ export const UI: Record<string, Localized> = {
   'home.qaTrends': { zh: '趋势追踪', en: 'Trend tracking' },
   'home.qaTrendsSub': { zh: '看见自己的变化', en: 'See your changes' },
 
+  // 伴侣双视角对比洞察
+  'home.compareTitle': { zh: '我们俩的状态', en: "How we're both doing" },
+  'home.compareAvgAnxiety': { zh: '平均焦虑', en: 'Avg anxiety' },
+  'home.compareAvgMood': { zh: '平均心情', en: 'Avg mood' },
+  'home.compareAvgSleep': { zh: '平均睡眠', en: 'Avg sleep' },
+  'home.compareNoData': { zh: '你和{name}都还没有足够的记录', en: "You and {name} don't have enough records yet" },
+  'home.compareInsight.bothCalm': { zh: '你们最近都挺平稳，真好', en: "You're both steady lately — that's lovely" },
+  'home.compareInsight.youHigher': { zh: '你最近的焦虑比{name}略高，记得照顾好自己', en: 'Your anxiety has been a bit higher than {name}’s — be kind to yourself' },
+  'home.compareInsight.partnerHigher': { zh: '{name}最近焦虑略高，多给对方一些支持', en: '{name} has been a bit more anxious — a little support goes a long way' },
+  'home.compareInsight.similar': { zh: '你和{name}的状态很接近', en: "You and {name} are in a similar place" },
+  'home.compareInsight.oneMissing': { zh: '{name}的记录还不够，多鼓励对方也记一记', en: "{name} doesn't have enough entries yet — encourage them to log too" },
+
   // 自测量表 / Scale
   'scale.title': { zh: '焦虑自测', en: 'Anxiety Self-Check' },
   'scale.part1': { zh: 'Part 1 · 情绪状态', en: 'Part 1 · Emotional State' },
@@ -226,6 +238,17 @@ export const UI: Record<string, Localized> = {
   'profile.cancel': { zh: '取消', en: 'Cancel' },
   'profile.save': { zh: '保存', en: 'Save' },
   'profile.editAria': { zh: '编辑称呼', en: 'Edit names' },
+
+  // 数据备份 / Data backup
+  'profile.backupTitle': { zh: '数据备份', en: 'Data Backup' },
+  'profile.backupHint': { zh: '所有数据只存在你的设备本地。建议定期导出备份，换设备或清缓存前尤其重要。', en: 'All data lives only on this device. Export a backup regularly — especially before switching devices or clearing cache.' },
+  'profile.export': { zh: '导出备份', en: 'Export backup' },
+  'profile.import': { zh: '导入备份', en: 'Import backup' },
+  'profile.clear': { zh: '清空全部数据', en: 'Clear all data' },
+  'profile.exportDone': { zh: '已导出备份文件', en: 'Backup file exported' },
+  'profile.importDone': { zh: '备份已导入', en: 'Backup imported' },
+  'profile.importFail': { zh: '导入失败：文件格式不正确', en: 'Import failed: invalid file' },
+  'profile.clearConfirm': { zh: '确定清空全部数据？此操作不可恢复。', en: 'Clear all data? This cannot be undone.' },
 
   // 分享卡片 / Share Card
   'share.title': { zh: '分享卡片', en: 'Share Card' },
