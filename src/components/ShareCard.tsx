@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useProfile } from '../context/ProfileContext'
 import { getLatestScaleResult, getTodayRecord, getProfileName } from '../utils/storage'
 import { getWhisperForDate } from '../data/whispers'
-import { useI18n } from '../i18n'
+import { useI18n, pick } from '../i18n'
+import type { Lang } from '../i18n'
+import type { DailyRecord, ScaleResult, Localized } from '../types'
 
 const WHITE = '#ffffff'
 const WHITE_90 = 'rgba(255,255,255,0.90)'
@@ -23,20 +25,59 @@ function moodEmoji(level: string): string {
   }
 }
 
+const MOOD_EMOJIS = ['😫', '😟', '😐', '🙂', '😊']
+const MOOD_ZH = ['很差', '低落', '一般', '不错', '很好']
+const MOOD_EN = ['awful', 'low', 'okay', 'good', 'great']
+
+// 根据今日记录 + 最新量表结果 + 今日一句，组合一段可编辑的分享文案
+function buildAutoCaption(
+  lang: Lang,
+  today: DailyRecord | null,
+  result: ScaleResult | null,
+  whisper: Localized,
+): string {
+  const w = pick(whisper, lang)
+  const parts: string[] = []
+
+  if (today) {
+    const mi = Math.min(5, Math.max(1, today.mood)) - 1
+    if (lang === 'zh') {
+      parts.push(`${MOOD_EMOJIS[mi]} 今天心情${MOOD_ZH[mi]}，睡了 ${today.sleep} 小时。`)
+      if (today.babyMilestone) parts.push(`宝宝今天：${today.babyMilestone}`)
+      if (today.gratitude) parts.push(`今日感恩：${today.gratitude}`)
+    } else {
+      parts.push(`${MOOD_EMOJIS[mi]} Today I feel ${MOOD_EN[mi]}, slept ${today.sleep}h.`)
+      if (today.babyMilestone) parts.push(`Baby today: ${today.babyMilestone}`)
+      if (today.gratitude) parts.push(`Grateful for: ${today.gratitude}`)
+    }
+  } else if (result) {
+    const cat = pick(result.category, lang)
+    parts.push(lang === 'zh' ? `最近一次自测：${cat}。` : `Latest self-check: ${cat}.`)
+  }
+
+  // 收尾金句
+  parts.push(lang === 'zh' ? `「${w}」` : `“${w}”`)
+  return parts.join('\n')
+}
+
 const CARD_COUNT = 12
 
 export function ShareCard({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { profile } = useProfile()
-  const { lang, t, L } = useI18n()
+  const { lang, t } = useI18n()
   const [saved, setSaved] = useState(false)
   const [bgIndex, setBgIndex] = useState(0) // 0-11，对应 cards/01..12
-
-  if (!open) return null
 
   const name = getProfileName(profile)
   const result = getLatestScaleResult(profile)
   const today = getTodayRecord(profile)
   const whisper = getWhisperForDate()
+
+  // 分享文案：默认可编辑，初始值由今日记录自动生成
+  const [caption, setCaption] = useState<string>(() => buildAutoCaption(lang, today, result, whisper))
+
+  if (!open) return null
+
   const dateLocale = lang === 'zh' ? 'zh-CN' : 'en-US'
   const dateStr = new Date().toLocaleDateString(dateLocale, { year: 'numeric', month: 'long', day: 'numeric' })
   const appName = t('app.name')
@@ -55,6 +96,8 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   const bgNo = bgIndex + 1
   const bgPath = `/cards/${padNo(bgNo)}.jpg`
   const subHeader = t('share.todayStatus').replace('{name}', name)
+
+  const regenerate = () => setCaption(buildAutoCaption(lang, today, result, whisper))
 
   const drawCard = () => {
     const W = 1080
@@ -101,10 +144,10 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
       ctx.font = '600 50px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
       ctx.fillText(statusText, W / 2, 600)
 
-      // 今日一句（自动换行）
+      // 可编辑分享文案（多行自动换行）
       ctx.fillStyle = WHITE_90
-      ctx.font = '400 32px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
-      wrapText(ctx, `“${L(whisper)}”`, W / 2, 760, W - 200, 48)
+      ctx.font = '400 30px "PingFang SC", "Hiragino Sans GB", system-ui, sans-serif'
+      wrapText(ctx, caption, W / 2, 720, W - 200, 44)
 
       // 底部：日期 + 标语
       ctx.fillStyle = WHITE_60
@@ -149,11 +192,31 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
               <div className="text-lg font-semibold tracking-apple mt-1">{statusText}</div>
             </div>
             <div className="text-center space-y-1">
-              <p className="text-sm leading-relaxed px-1">“{L(whisper)}”</p>
+              <p className="text-sm leading-relaxed px-1 whitespace-pre-line">{caption}</p>
               <div className="text-[11px] opacity-80">{dateStr}</div>
               <div className="text-[11px] font-medium">{t('share.tagline')}</div>
             </div>
           </div>
+        </div>
+
+        {/* 可编辑分享文案 */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-xs text-calm-500">{t('share.captionLabel')}</label>
+            <button
+              onClick={regenerate}
+              className="text-xs text-apple font-medium px-2 py-1 rounded-full bg-apple/10 active:scale-95 transition"
+            >
+              ✨ {t('share.generate')}
+            </button>
+          </div>
+          <textarea
+            value={caption}
+            onChange={e => setCaption(e.target.value)}
+            rows={4}
+            placeholder={t('share.captionPlaceholder')}
+            className="w-full rounded-[12px] border border-hairline bg-calm-50 p-3 text-sm text-ink resize-none leading-relaxed focus:outline-none focus:ring-2 focus:ring-apple/30"
+          />
         </div>
 
         {/* 背景选择 */}
@@ -187,20 +250,24 @@ export function ShareCard({ open, onClose }: { open: boolean; onClose: () => voi
   )
 }
 
-// 自动换行
+// 自动换行（支持显式 \n 分段 + 中文逐字 + emoji 安全）
 function wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) {
-  const chars = text.split('')
-  let line = ''
+  const paragraphs = text.split('\n')
   let yy = y
-  for (const ch of chars) {
-    const test = line + ch
-    if (ctx.measureText(test).width > maxWidth && line) {
-      ctx.fillText(line, x, yy)
-      line = ch
-      yy += lineHeight
-    } else {
-      line = test
+  for (const para of paragraphs) {
+    const chars = Array.from(para)
+    let line = ''
+    for (const ch of chars) {
+      const test = line + ch
+      if (ctx.measureText(test).width > maxWidth && line) {
+        ctx.fillText(line, x, yy)
+        line = ch
+        yy += lineHeight
+      } else {
+        line = test
+      }
     }
+    if (line) ctx.fillText(line, x, yy)
+    yy += lineHeight
   }
-  if (line) ctx.fillText(line, x, yy)
 }

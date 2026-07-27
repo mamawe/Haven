@@ -237,6 +237,9 @@ export const UI: Record<string, Localized> = {
   'share.todayStatus': { zh: '{name} · 今日状态', en: "{name} · Today's status" },
   'share.anxietyToday': { zh: '今日焦虑 {n}/10', en: 'Anxiety {n}/10' },
   'share.tagline': { zh: '育儿这条路，你不需要完美', en: "On this parenting journey, you don't need to be perfect" },
+  'share.captionLabel': { zh: '分享文案（可编辑）', en: 'Caption (editable)' },
+  'share.captionPlaceholder': { zh: '写点什么，或点下方按钮根据今日记录生成…', en: 'Write something, or tap below to generate from today…' },
+  'share.generate': { zh: '根据今日记录生成', en: 'Generate from today' },
 
   // 主题 / Theme
   'theme.label': { zh: '切换主题', en: 'Theme' },
